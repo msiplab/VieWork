@@ -9,3 +9,6 @@ https://colab.research.google.com
 
 ## Pillow
 https://pillow.readthedocs.io/en/stable/index.html
+
+## 参考サイト
+- https://qiita.com/croquette0212/items/36cadce5bf0fb703ed19
