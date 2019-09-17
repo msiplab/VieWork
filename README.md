@@ -6,3 +6,6 @@
 
 ## Google Colab をはじめる
 https://colab.research.google.com
+
+## Pillow
+https://pillow.readthedocs.io/en/stable/index.html
