@@ -10,5 +10,8 @@
 ## Pillow
 - https://pillow.readthedocs.io/en/stable/index.html
 
+## SciPy
+- https://www.scipy.org/
+
 ## 参考サイト
 - https://qiita.com/croquette0212/items/36cadce5bf0fb703ed19
