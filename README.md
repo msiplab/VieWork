@@ -11,7 +11,7 @@
 - https://pillow.readthedocs.io/en/stable/index.html
 
 ## SciPy
-- https://www.scipy.org/
+- https://docs.scipy.org/doc/scipy/reference/
 
 ### SciPy.ndimage 
 - https://docs.scipy.org/doc/scipy/reference/ndimage.html
