@@ -14,10 +14,10 @@
 - https://docs.scipy.org/doc/scipy/reference/
 
 ### SciPy.ndimage 
-- https://docs.scipy.org/doc/scipy/reference/ndimage.html#module-scipy.ndimage
+- https://docs.scipy.org/doc/scipy/reference/ndimage.html
 
 ### SciPy.fftpack
-- https://docs.scipy.org/doc/scipy/reference/fftpack.html#module-scipy.fftpack
+- https://docs.scipy.org/doc/scipy/reference/fftpack.html
 
 ## 参考サイト
 - https://qiita.com/croquette0212/items/36cadce5bf0fb703ed19
