@@ -15,6 +15,7 @@
 - https://scikit-image.org/
 
 ## SciPy
+- http://www.turbare.net/transl/scipy-lecture-notes/advanced/image_processing/index.html
 - https://docs.scipy.org/doc/scipy/reference/
 
 ### SciPy.signal
