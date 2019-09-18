@@ -13,6 +13,9 @@
 ## SciPy
 - https://docs.scipy.org/doc/scipy/reference/
 
+### SciPy.signal
+- https://docs.scipy.org/doc/scipy/reference/signal.html
+
 ### SciPy.ndimage 
 - https://docs.scipy.org/doc/scipy/reference/ndimage.html
 
