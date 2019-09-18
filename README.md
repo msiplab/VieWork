@@ -10,6 +10,9 @@
 ## Pillow
 - https://pillow.readthedocs.io/en/stable/index.html
 
+## Scikit-image
+- https://scikit-image.org/
+
 ## SciPy
 - https://docs.scipy.org/doc/scipy/reference/
 
