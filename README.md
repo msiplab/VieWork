@@ -11,6 +11,7 @@
 - https://pillow.readthedocs.io/en/stable/index.html
 
 ## Scikit-image
+- http://www.turbare.net/transl/scipy-lecture-notes/packages/scikit-image/index.html
 - https://scikit-image.org/
 
 ## SciPy
