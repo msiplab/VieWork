@@ -29,4 +29,5 @@
 
 ## 参考サイト
 - https://qiita.com/croquette0212/items/36cadce5bf0fb703ed19
+- https://calendar.google.com/calendar/render?hl=ja#main_7
 - http://www.turbare.net/transl/scipy-lecture-notes/packages/scikit-image/index.html
