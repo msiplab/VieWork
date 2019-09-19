@@ -7,9 +7,6 @@
 ## Google Colab をはじめる
 - https://colab.research.google.com
 
-## Pillow
-- https://pillow.readthedocs.io/en/stable/index.html
-
 ## Scikit-image
 - https://scikit-image.org/
 - http://www.turbare.net/transl/scipy-lecture-notes/packages/scikit-image/index.html
@@ -26,6 +23,9 @@
 
 ### SciPy.signal
 - https://docs.scipy.org/doc/scipy/reference/signal.html
+
+## Pillow
+- https://pillow.readthedocs.io/en/stable/index.html
 
 ## 参考サイト
 - https://qiita.com/croquette0212/items/36cadce5bf0fb703ed19
