@@ -11,21 +11,21 @@
 - https://pillow.readthedocs.io/en/stable/index.html
 
 ## Scikit-image
-- http://www.turbare.net/transl/scipy-lecture-notes/packages/scikit-image/index.html
 - https://scikit-image.org/
+- http://www.turbare.net/transl/scipy-lecture-notes/packages/scikit-image/index.html
 
 ## SciPy
-- http://www.turbare.net/transl/scipy-lecture-notes/advanced/image_processing/index.html
 - https://docs.scipy.org/doc/scipy/reference/
-
-### SciPy.signal
-- https://docs.scipy.org/doc/scipy/reference/signal.html
+- http://www.turbare.net/transl/scipy-lecture-notes/advanced/image_processing/index.html
 
 ### SciPy.ndimage 
 - https://docs.scipy.org/doc/scipy/reference/ndimage.html
 
 ### SciPy.fftpack
 - https://docs.scipy.org/doc/scipy/reference/fftpack.html
+
+### SciPy.signal
+- https://docs.scipy.org/doc/scipy/reference/signal.html
 
 ## 参考サイト
 - https://qiita.com/croquette0212/items/36cadce5bf0fb703ed19
