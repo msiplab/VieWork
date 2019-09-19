@@ -7,11 +7,11 @@
 ## Google Colab をはじめる
 - https://colab.research.google.com
 
-## Scikit-image
+## Scikit-image ライブラリ
 - https://scikit-image.org/
 - http://www.turbare.net/transl/scipy-lecture-notes/packages/scikit-image/index.html
 
-## SciPy
+## SciPy ライブラリ
 - https://docs.scipy.org/doc/scipy/reference/
 - http://www.turbare.net/transl/scipy-lecture-notes/advanced/image_processing/index.html
 
@@ -24,7 +24,7 @@
 ### SciPy.signal
 - https://docs.scipy.org/doc/scipy/reference/signal.html
 
-## Pillow
+## Pillow ライブラリ
 - https://pillow.readthedocs.io/en/stable/index.html
 
 ## 参考サイト
