@@ -31,3 +31,9 @@
 - https://qiita.com/croquette0212/items/36cadce5bf0fb703ed19
 - http://ishidate.my.coocan.jp/python/python.htm
 - http://www.turbare.net/transl/scipy-lecture-notes/packages/scikit-image/index.html
+
+## 関連講義へのリンク
+
+- [プログラミングBI/BII](https://github.com/msiplab/EicProgLab)
+- [電子情報通信実験Ⅳ](https://github.com/msiplab/EicEngLabIV)
+- [画像処理特論](https://github.com/msiplab/AtipWork)
