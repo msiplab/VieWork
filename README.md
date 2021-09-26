@@ -27,6 +27,15 @@
 ## Pillow ライブラリ
 - https://pillow.readthedocs.io/en/stable/index.html
 
+## PyTorch
+- https://pytorch.org/
+
+### PyTorch Vision
+- https://pytorch.org/vision/stable/index.html
+
+## MATLAB/Simulink
+- https://jp.mathworks.com/academia/tah-portal/niigata-university-31576302.html
+
 ## 参考サイト
 - https://qiita.com/croquette0212/items/36cadce5bf0fb703ed19
 - http://ishidate.my.coocan.jp/python/python.htm
