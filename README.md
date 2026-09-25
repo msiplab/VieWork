@@ -3,7 +3,50 @@
 # VieWork
 新潟大学工学部電子情報通信プログラム「画像情報工学」サプリメント
 
-## ソースコードの動かし方
+## フォルダ構成
+
+```
+VieWork/
+├── VieWork.prj        MATLAB プロジェクト（パス設定が自動で行われる）
+├── code/
+│   ├── matlab/        MATLAB ライブスクリプト（プレーンテキスト .m 形式）
+│   │   └── +vie/      共通ユーティリティ関数
+│   └── python/        Jupyter ノートブック（Google Colab 用）
+├── data/              画像データ（ダウンロード取得・Git 管理外）
+└── results/           スクリプトが出力する図・画像（Git 管理外）
+```
+
+`data` と `results` は Git の管理外です。`vie.prjfolders` が必要に応じて作成します。
+
+## MATLAB コードの動かし方
+
+MATLAB でプロジェクトファイルを開くと、パス設定が自動で行われます。
+
+```matlab
+openProject('VieWork.prj')
+```
+
+初回だけ演習用の画像データを取得してください（Kodak Lossless True Color Image Suite）。
+
+```matlab
+vie.download_img
+```
+
+あとは各回のスクリプトを実行してください。
+
+```matlab
+vie_sec02_resolution   % 第2回 解像度
+```
+
+- スクリプト名 `vie_secNN_<主題>.m` は講義の第 NN 回に対応します。
+- ライブスクリプトはプレーンテキスト Live Code 形式（`.m`）で保存しています（要 MATLAB R2025a 以降）。
+- 出力は `results/`、入力データは `data/` に置かれます。パスは `vie.prjfolders` で解決してください。
+
+```matlab
+[datfolder,resfolder] = vie.prjfolders();
+```
+
+## Python コードの動かし方
 ソースコードにアクセスして「Open in Colab」のボタンをクリックしてください。
 
 ## Google Colab をはじめる

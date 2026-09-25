@@ -102,3 +102,21 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# ---- MATLAB ----
+*.asv
+*.m~
+*.mex*
+*.slxc
+*.slprj/
+*.autosave
+
+# ---- OS / editors ----
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# ---- データと出力（原則として管理外）----
+data/
+results/
