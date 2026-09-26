@@ -1,68 +1,103 @@
 %[text] # 第14回 パターン認識と特徴抽出
 %[text] 村松正吾　「画像情報工学」
 %[text] 動作確認： MATLAB R2026b
-%[text] 第14回のスライド（vie2026-14）で使う図と数値を作る。特徴空間と最近傍決定則，色の特徴空間，ハリスのコーナー検出，キャニーの輪郭線検出，ハフ変換による直線検出，ニューラルネットワーク（活性化関数，誤差逆伝播法），畳み込み層とプーリング層を扱う。
+%[text] 第14回のスライド（vie2026-14）で使う図と数値を作る。特徴空間と最近傍決定則，色の特徴空間，ハリスのコーナー検出，キャニーの輪郭線検出（教科書の例題「プレウィットフィルタ」「勾配の大きさ」），ハフ変換による直線検出，ニューラルネットワーク（活性化関数，教科書 10.1.1 項の損失関数による誤差逆伝播法の学習），畳み込み層とプーリング層を扱う。記号は教科書に合わせる。
 %[text:tableOfContents]{"heading":"目次"}
 %%
 %[text] ## 準備
 [datfolder,resfolder] = vie.prjfolders();
 vie.download_img(false)
+%[text] 図の配色はロゴの 3 色（メインの緑 #008855，青 #2E75B6，橙 #C55A11）と灰色を基本にする。薄い色は白と混ぜて作る。
+cMain = [0 136 85]/255;                          % 緑（メイン）
+cCool = [46 117 182]/255;                        % 青（寒色系）
+cWarm = [197 90 17]/255;                         % 橙（暖色系）
+cLogo = [cMain; cCool; cWarm];
+cLight = 1 - 0.18*(1 - cLogo);                   % 塗り用の薄い色
 %%
-%[text] ## 特徴空間と最近傍決定則
-%[text] 2 次元の特徴ベクトルをもつ 3 クラスの学習データ（各 30 個）から，クラスごとの平均を代表ベクトル $ \\boldsymbol{\\mu}\_i $ とする（パターン学習）。未知の入力は最も近い代表ベクトルのクラスに識別する（最近傍決定則）。
+%[text] ## 特徴空間とパターン学習
+%[text] 2 次元の特徴ベクトル $ \\mathbf{x}=(x\_0\\ \\ x\_1)^\\top $ をもつ 3 クラス $ \\omega\_1,\\omega\_2,\\omega\_3 $ の学習データ（各 30 個）を作る。同じクラスのパターンは特徴空間上で塊（クラスタ）をなす。クラスごとの平均を代表ベクトル $ \\boldsymbol{\\mu}\_i $ とする（パターン学習）。
 rng(0)
 mu0 = [1 1; 4 1.5; 2.5 4];                        % 真の中心
+nTrain = 30;                                     % クラスあたりの学習データ数
 Xtr = []; ytr = [];
 for i = 1:3
-    Xtr = [Xtr; mu0(i,:) + 0.6*randn(30,2)]; %#ok<AGROW>
-    ytr = [ytr; i*ones(30,1)]; %#ok<AGROW>
+    Xtr = [Xtr; mu0(i,:) + 0.6*randn(nTrain,2)]; %#ok<AGROW>
+    ytr = [ytr; i*ones(nTrain,1)]; %#ok<AGROW>
 end
 mu = zeros(3,2);
 for i = 1:3, mu(i,:) = mean(Xtr(ytr==i,:), 1); end
-mu                                              % 代表ベクトル
+mu                                              % 代表ベクトル（行が μ_i^T）
+vie.savetex("vie-14-mu", vie.arr2tex(round(mu,2), "%.2f"));
+%[text] 特徴空間上の学習データ（クラスごとに色分け）と代表ベクトル（＋印）。
+clf
+hold on
+for i = 1:3
+    scatter(Xtr(ytr==i,1), Xtr(ytr==i,2), 20, cLogo(i,:), "filled")
+end
+for i = 1:3
+    plot(mu(i,1), mu(i,2), "k+", "MarkerSize", 14, "LineWidth", 2.5)
+    text(mu(i,1)+0.2, mu(i,2)+0.35, sprintf("{\\bf\\mu}_%d", i), "FontSize", 14, "BackgroundColor", "w", "Margin", 0.5)
+end
+hold off, box on, grid on, axis equal, axis([-1 6 -1 6])
+xlabel("$x_0$", "Interpreter", "latex"), ylabel("$x_1$", "Interpreter", "latex")
+legend(["\omega_1","\omega_2","\omega_3"], "Location", "northeast")
+set(gca, "FontSize", 12)
+exportgraphics(gca, fullfile(resfolder,"vie-14-feature-space.png"), "Resolution", 150, "Width", 8, "Height", 8, "Units", "centimeters")
+%%
+%[text] ## パターン識別：最近傍決定則
+%[text] 未知の入力 $ \\mathbf{x} $ は，最も近い代表ベクトルのクラスに識別する（最近傍決定則）。距離はユークリッド距離 $ \\|\\mathbf{x}-\\boldsymbol{\\mu}\_i\\|\_2 $ で測る。
 xq = [3 2.5];                                    % 未知入力
 d = vecnorm(mu - xq, 2, 2)'                      % 各代表ベクトルまでの距離
 [~, cls] = min(d)
-vie.savetex("vie-14-mu", vie.arr2tex(round(mu,2), "%.2f"));
 vie.savetex("vie-14-d", strjoin(compose("%.2f", d), ",\ "));
 vie.savetex("vie-14-cls", sprintf("%d", cls));
-%[text] 特徴空間と識別境界（各点を最も近い代表ベクトルのクラスで色分け）。
-[g1, g2] = meshgrid(linspace(-1, 6, 281));
-[~, lab] = min(cat(3, (g1-mu(1,1)).^2+(g2-mu(1,2)).^2, (g1-mu(2,1)).^2+(g2-mu(2,2)).^2, (g1-mu(3,1)).^2+(g2-mu(3,2)).^2), [], 3);
+%[text] 前回の演習課題（14）の図にならい，未知入力 $ \\mathbf{x} $ （☆印）から各代表ベクトルへ線分を引き，距離を添える。背景は各点を最も近い代表ベクトルのクラスで塗り分けたもの（識別境界は代表ベクトルどうしの垂直二等分線になる）。
+[g1, g2] = meshgrid(linspace(0, 5, 301));
+[~, lab] = min(pdist2([g1(:) g2(:)], mu), [], 2);
+lab = reshape(lab, size(g1));
 clf
-cmapL = [0.85 0.9 1; 1 0.88 0.85; 0.88 1 0.88];
-imagesc(g1(1,:), g2(:,1), lab), set(gca, "YDir", "normal"), colormap(gca, cmapL), hold on
-col = [0 0.3 0.9; 0.85 0.2 0.1; 0.1 0.6 0.2];
+imagesc(g1(1,:), g2(:,1), lab), set(gca, "YDir", "normal"), colormap(gca, cLight), clim([0.5 3.5])
+hold on
 for i = 1:3
-    scatter(Xtr(ytr==i,1), Xtr(ytr==i,2), 18, col(i,:), "filled")
-    plot(mu(i,1), mu(i,2), "k+", "MarkerSize", 14, "LineWidth", 2.5)
+    scatter(Xtr(ytr==i,1), Xtr(ytr==i,2), 12, cLogo(i,:), "filled", "MarkerFaceAlpha", 0.35)
 end
-plot(xq(1), xq(2), "kp", "MarkerSize", 14, "MarkerFaceColor", "y")
-hold off, axis equal tight, xlabel("x_1"), ylabel("x_2"), set(gca, "FontSize", 13)
-exportgraphics(gca, fullfile(resfolder,"vie-14-feature-space.png"), "Resolution", 110)
-%[text] 新しいテストデータ（各 30 個）での識別率。
+for i = 1:3
+    if i == cls, ls = "-"; lw = 3; else, ls = "--"; lw = 1.5; end
+    plot([xq(1) mu(i,1)], [xq(2) mu(i,2)], ls, "Color", cLogo(i,:), "LineWidth", lw)
+    text((xq(1)+mu(i,1))/2, (xq(2)+mu(i,2))/2, sprintf("%.2f", d(i)), "FontSize", 12, ...
+        "BackgroundColor", "w", "Margin", 1, "HorizontalAlignment", "center", "Color", cLogo(i,:))
+    plot(mu(i,1), mu(i,2), "k+", "MarkerSize", 14, "LineWidth", 2.5)
+    text(mu(i,1)+0.15, mu(i,2)-0.3, sprintf("{\\bf\\mu}_%d", i), "FontSize", 14, "BackgroundColor", "w", "Margin", 0.5)
+end
+plot(xq(1), xq(2), "kp", "MarkerSize", 18, "MarkerFaceColor", "w", "LineWidth", 1.5)
+text(xq(1)+0.2, xq(2)+0.2, "{\bfx}", "FontSize", 14)
+hold off, axis equal, axis([0 5 0 5]), box on
+xlabel("$x_0$", "Interpreter", "latex"), ylabel("$x_1$", "Interpreter", "latex"), set(gca, "FontSize", 12)
+exportgraphics(gca, fullfile(resfolder,"vie-14-nn-rule.png"), "Resolution", 150, "Width", 8, "Height", 8, "Units", "centimeters")
+%[text] 新しいテストデータ（各クラス 30 個）での識別率。
 Xte = []; yte = [];
 for i = 1:3
-    Xte = [Xte; mu0(i,:) + 0.6*randn(30,2)]; %#ok<AGROW>
-    yte = [yte; i*ones(30,1)]; %#ok<AGROW>
+    Xte = [Xte; mu0(i,:) + 0.6*randn(nTrain,2)]; %#ok<AGROW>
+    yte = [yte; i*ones(nTrain,1)]; %#ok<AGROW>
 end
 [~, yhat] = min(pdist2(Xte, mu), [], 2);
 acc = mean(yhat == yte)
 vie.savetex("vie-14-acc", sprintf("%.0f", 100*acc));
+vie.savetex("vie-14-nte", sprintf("%d", numel(yte)));
 %%
 %[text] ## 色の特徴空間
-%[text] 画像の各画素の (R, G, B) を特徴ベクトルとみなすと，RGB 空間が特徴空間になる。
+%[text] 画像の各画素の (R, G, B) を特徴ベクトルとみなすと，RGB 空間が特徴空間になる（色そのものが内容なので，点は画素の色で塗る）。
 Xc = im2double(imread(fullfile(datfolder,"kodim23.png")));
 Xs = imresize(Xc, 1/8);
 v = reshape(Xs, [], 3);
 clf
 scatter3(v(:,1), v(:,2), v(:,3), 8, v, "filled"), axis([0 1 0 1 0 1]), grid on
 xlabel("R"), ylabel("G"), zlabel("B"), view(-40, 25), set(gca, "FontSize", 12)
-exportgraphics(gca, fullfile(resfolder,"vie-14-rgbspace.png"), "Resolution", 110)
+exportgraphics(gca, fullfile(resfolder,"vie-14-rgbspace.png"), "Resolution", 150, "Width", 9, "Height", 6, "Units", "centimeters")
 imwrite(imresize(Xc, 0.25), fullfile(resfolder,"vie-14-parrot.png"))
 %%
 %[text] ## ハリスのコーナー検出：局所構造行列の数値例
-%[text] 局所構造行列（構造テンソル） $ \\hat{\\mathbf{M}}=\\begin{pmatrix}\\hat{A}&\\hat{C}\\\\\\hat{C}&\\hat{B}\\end{pmatrix} $ ， $ A=x\_\\mathrm{v}^2,\\ B=x\_\\mathrm{h}^2,\\ C=x\_\\mathrm{v}x\_\\mathrm{h} $ （近傍で平均）と，コーナー応答 $ r=\\det\\hat{\\mathbf{M}}-k(\\mathrm{trace}\\hat{\\mathbf{M}})^2 $ （ $ k=0.04 $ ）を，平坦・エッジ・コーナーの $ 5\\times5 $ パッチで比べる。
+%[text] 構造テンソル $ \\hat{\\mathbf{M}}=\\begin{pmatrix}\\hat{A}&\\hat{C}\\\\\\hat{C}&\\hat{B}\\end{pmatrix} $ ， $ A=x\_\\mathrm{v}^2,\\ B=x\_\\mathrm{h}^2,\\ C=x\_\\mathrm{v}x\_\\mathrm{h} $ （近傍で平均）と，コーナー応答値 $ r=\\det(\\hat{\\mathbf{M}})-k(\\mathrm{trace}(\\hat{\\mathbf{M}}))^2 $ （ $ k=0.04 $ ）を，平坦・エッジ・コーナーの $ 5\\times5 $ パッチで比べる。
 k = 0.04;
 P = {zeros(5), [zeros(5,2) ones(5,3)], [zeros(2,5); zeros(3,2) ones(3,3)]};
 names = ["平坦","エッジ","コーナー"];
@@ -80,20 +115,21 @@ vie.savetex("vie-14-harris-det", strjoin(compose("%.3f", R(:,1)'), " & "));
 vie.savetex("vie-14-harris-tr", strjoin(compose("%.2f", R(:,2)'), " & "));
 %%
 %[text] ## ハリスのコーナー検出：処理結果
-%[text] 市松模様と鉄骨構造の画像（gantrycrane.png）でコーナーを検出する。
+%[text] 市松模様と鉄骨構造の画像（gantrycrane.png）でコーナーを検出する。コーナー点は橙の＋印で示す。
 C = checkerboard(24, 3, 3) > 0.5;
 C = double(C);
 cc = corner(C, "Harris", 40);
 Gr = im2double(rgb2gray(imread("gantrycrane.png")));
 cg = corner(Gr, "Harris", 150, "SensitivityFactor", 0.04);
-clf, imshow(C), hold on, plot(cc(:,1), cc(:,2), "r+", "MarkerSize", 10, "LineWidth", 2), hold off
-exportgraphics(gca, fullfile(resfolder,"vie-14-harris-checker.png"), "Resolution", 110)
-clf, imshow(Gr), hold on, plot(cg(:,1), cg(:,2), "r+", "MarkerSize", 6, "LineWidth", 1.5), hold off
-exportgraphics(gca, fullfile(resfolder,"vie-14-harris-crane.png"), "Resolution", 110)
+clf, imshow(C), hold on, plot(cc(:,1), cc(:,2), "+", "Color", cWarm, "MarkerSize", 10, "LineWidth", 2.5), hold off
+exportgraphics(gca, fullfile(resfolder,"vie-14-harris-checker.png"), "Resolution", 150, "Width", 6, "Height", 6, "Units", "centimeters")
+clf, imshow(Gr), hold on, plot(cg(:,1), cg(:,2), "+", "Color", cWarm, "MarkerSize", 7, "LineWidth", 2), hold off
+exportgraphics(gca, fullfile(resfolder,"vie-14-harris-crane.png"), "Resolution", 150, "Width", 12, "Height", 12*size(Gr,1)/size(Gr,2), "Units", "centimeters")
 imwrite(C, fullfile(resfolder,"vie-14-checker.png"))
 imwrite(Gr, fullfile(resfolder,"vie-14-crane.png"))
 ncorner = [size(cc,1) size(cg,1)]
 vie.savetex("vie-14-nc-checker", sprintf("%d", ncorner(1)));
+vie.savetex("vie-14-nc-crane", sprintf("%d", ncorner(2)));
 %%
 %[text] ## キャニーの輪郭線検出
 %[text] ガウス平滑化 → 勾配 → 非極大抑制 → ヒステリシス閾値処理。比較としてソーベル勾配の単純な閾値処理も示す。
@@ -106,48 +142,79 @@ Xk = imresize(Xk, 0.5);
 imwrite(Xk, fullfile(resfolder,"vie-14-parrot-gray.png"))
 imwrite(~edge(Xk, "canny"), fullfile(resfolder,"vie-14-parrot-canny.png"))
 %%
+%[text] ## 教科書の例題「プレウィットフィルタ」「勾配の大きさ」（3.2 節）
+%[text] キャニーの輪郭線検出の勾配計算の例。教科書の例題「矩形フィルタ」の配列 $ \\mathsf{x} $ にプレウィットフィルタ（垂直方向 $ f\_\\mathrm{v} $ ，水平方向 $ f\_\\mathrm{h} $ ）を施し，勾配ベクトル $ \\vec{y}\[\\boldsymbol{n}\]=(x\_\\mathrm{v}\[\\boldsymbol{n}\]\\ \\ x\_\\mathrm{h}\[\\boldsymbol{n}\])^\\top $ の大きさ $ y\_\\mathrm{mag}\[\\boldsymbol{n}\]=\\sqrt{x\_\\mathrm{v}^2\[\\boldsymbol{n}\]+x\_\\mathrm{h}^2\[\\boldsymbol{n}\]} $ を求める。周囲の値はすべて零値とする。
+%[text] 教科書の線形フィルタ（式 (3.1)）は局所的な積和（相関）の形なので， `imfilter` の既定（相関，零値拡張）がそのまま使える。
+xp = [18 9 9 9; 27 9 9 9; 36 9 9 9];              % 教科書の例題「矩形フィルタ」の配列
+fvP = [-1 -1 -1; 0 0 0; 1 1 1];                  % プレウィットフィルタ（垂直方向）
+fhP = fvP.';                                     % プレウィットフィルタ（水平方向）
+Xv = imfilter(xp, fvP)                           % 垂直方向の差分 x_v
+Xh = imfilter(xp, fhP)                           % 水平方向の差分 x_h
+Ymag = sqrt(Xv.^2 + Xh.^2)                       % 勾配の大きさ y_mag
+%[text] 教科書の解答と一致することを確かめる。
+XvBook = [36 45 27 18; 18 18 0 0; -36 -45 -27 -18];
+XhBook = [18 -27 0 -18; 27 -54 0 -27; 18 -45 0 -18];
+YmagBook = [40.25 52.48 27.00 25.46; 32.45 56.92 0.00 27.00; 40.25 63.64 27.00 25.46];
+assert(isequal(Xv, XvBook) && isequal(Xh, XhBook) && isequal(round(Ymag, 2), YmagBook), ...
+    "教科書の例題の解答と一致しない")
+vie.savetex("vie-14-pv", vie.arr2tex(Xv, "%d"));
+vie.savetex("vie-14-ph", vie.arr2tex(Xh, "%d"));
+vie.savetex("vie-14-mag", vie.arr2tex(Ymag, "%.2f"));
+%%
 %[text] ## ハフ変換：数値例
-%[text] 一直線上の 3 点 A(0,2), B(1,1), C(2,0) は， $ \\theta=45^\\circ $ でいずれも $ \\rho=x\\cos\\theta+y\\sin\\theta=\\sqrt{2} $ となる（3 本の曲線が 1 点で交わる）。
+%[text] エッジ画素の位置 $ \\boldsymbol{q}=(q\_1\\ \\ q\_2)^\\top $ を $ \\rho=q\_1\\cos\\theta+q\_2\\sin\\theta $ で $ (\\theta,\\rho) $ 空間の曲線に写す。一直線上の 3 点 $ \\boldsymbol{q}\_\\mathrm{A}=(0\\ \\ 2)^\\top $ ， $ \\boldsymbol{q}\_\\mathrm{B}=(1\\ \\ 1)^\\top $ ， $ \\boldsymbol{q}\_\\mathrm{C}=(2\\ \\ 0)^\\top $ は， $ \\theta=45^\\circ $ でいずれも $ \\rho=\\sqrt{2} $ となる（3 本の曲線が 1 点で交わる）。
 pts = [0 2; 1 1; 2 0];
 th = deg2rad(45);
 rho = pts(:,1)*cos(th) + pts(:,2)*sin(th)
 tt = linspace(0, pi, 361);
+tp = char(0x22A4);                               % 転置の記号 ⊤
 clf
-plot(rad2deg(tt), pts(:,1)*cos(tt) + pts(:,2)*sin(tt), "LineWidth", 2), hold on
+hold on
+for i = 1:3
+    plot(rad2deg(tt), pts(i,1)*cos(tt) + pts(i,2)*sin(tt), "Color", cLogo(i,:), "LineWidth", 2)
+end
 plot(45, sqrt(2), "ko", "MarkerSize", 10, "LineWidth", 2), hold off
-grid on, xlabel("\theta [度]"), ylabel("\rho"), legend(["A(0,2)","B(1,1)","C(2,0)"], "Location","southwest")
-xlim([0 180]), xticks(0:45:180), set(gca, "FontSize", 13)
-exportgraphics(gca, fullfile(resfolder,"vie-14-hough-curves.png"), "Resolution", 110)
+box on, grid on, xlabel("\theta [度]"), ylabel("\rho")
+legend("{\bf\itq}_{\rm" + ["A","B","C"] + "}=(" + string(pts(:,1)') + " " + string(pts(:,2)') + ")^{" + tp + "}", ...
+    "Location", "southwest", "Interpreter", "tex")
+xlim([0 180]), xticks(0:45:180), set(gca, "FontSize", 12)
+exportgraphics(gca, fullfile(resfolder,"vie-14-hough-curves.png"), "Resolution", 150, "Width", 10, "Height", 6.5, "Units", "centimeters")
 vie.savetex("vie-14-hough-rho", sprintf("%.3f", rho(1)));
 %%
 %[text] ## ハフ変換：処理例
-%[text] キャニーの輪郭画像を投票し，投票度数の大きなセル（ピーク）を探索して直線を描く（逆ハフ変換）。
+%[text] キャニーの輪郭画像を投票し，投票度数の大きなセル（ピーク）を探索して直線を描く（逆ハフ変換）。投票度数は見やすいよう平方根をとって白→緑→濃緑の色で表示する。選ばれたセルは橙の□印。
 [Hh, T, Rr] = hough(Ec);
 pk = houghpeaks(Hh, 12, "Threshold", 0.3*max(Hh(:)));
-lines = houghlines(Ec, T, Rr, pk, "FillGap", 20, "MinLength", 60);
+hl = houghlines(Ec, T, Rr, pk, "FillGap", 20, "MinLength", 60);
+cmapV = interp1([0 0.5 1], [1 1 1; cMain; 0 0.2 0.12], linspace(0, 1, 256));   % 白→緑→濃緑
 clf
-imshow(rescale(log(1 + Hh)), "XData", T, "YData", Rr, "InitialMagnification", "fit"), axis on, axis normal   % 投票度数を対数表示
-colormap(gca, hot(256)), xlabel("\theta [度]"), ylabel("\rho"), hold on
-plot(T(pk(:,2)), Rr(pk(:,1)), "cs", "MarkerSize", 8, "LineWidth", 1.5), hold off
-set(gca, "FontSize", 12)
-exportgraphics(gca, fullfile(resfolder,"vie-14-hough-acc.png"), "Resolution", 110)
+imshow(sqrt(rescale(Hh)), "XData", T, "YData", Rr, "InitialMagnification", "fit"), axis on, axis normal   % 投票度数（平方根）
+colormap(gca, cmapV), xlabel("\theta [度]"), ylabel("\rho"), hold on
+plot(T(pk(:,2)), Rr(pk(:,1)), "s", "Color", cWarm, "MarkerSize", 7, "LineWidth", 2), hold off
+xticks(-90:45:90), set(gca, "FontSize", 12)
+exportgraphics(gca, fullfile(resfolder,"vie-14-hough-acc.png"), "Resolution", 150, "Width", 10, "Height", 7, "Units", "centimeters")
 clf, imshow(Gr), hold on
-for kk = 1:numel(lines)
-    xy = [lines(kk).point1; lines(kk).point2];
-    plot(xy(:,1), xy(:,2), "LineWidth", 3, "Color", "g")
+for kk = 1:numel(hl)
+    xy = [hl(kk).point1; hl(kk).point2];
+    plot(xy(:,1), xy(:,2), "LineWidth", 3, "Color", cMain)
 end
 hold off
-exportgraphics(gca, fullfile(resfolder,"vie-14-hough-lines.png"), "Resolution", 110)
-nlines = numel(lines)
+exportgraphics(gca, fullfile(resfolder,"vie-14-hough-lines.png"), "Resolution", 150, "Width", 12, "Height", 12*size(Gr,1)/size(Gr,2), "Units", "centimeters")
+nlines = numel(hl)
 colormap(gca, gray)
 %%
 %[text] ## 活性化関数とニューロンの数値例
+%[text] 活性化関数 $ \\phi(\\cdot) $ の例：シグモイド関数 $ 1/(1+\\mathrm{e}^{-u}) $ ， $ \\tanh u $ ，ReLU（整流線形関数） $ \\max(0,u) $ 。
 u = linspace(-4, 4, 401);
 clf
-plot(u, 1./(1+exp(-u)), u, tanh(u), u, max(u,0), "LineWidth", 2), grid on, ylim([-1.2 2])
-legend(["Logistic Sigmoid","Tangent Sigmoid","ReLU"], "Location","northwest"), xlabel("u"), set(gca, "FontSize", 13)
-exportgraphics(gca, fullfile(resfolder,"vie-14-activation.png"), "Resolution", 110)
-%[text] 入力 $ \\mathbf{x}=(2,1)^\\top $ ，重み $ \\mathbf{w}=(0.5,-1)^\\top $ ，バイアス $ b=0.2 $ のニューロン： $ u=\\mathbf{w}^\\top\\mathbf{x}+b $ 。
+plot(u, 1./(1+exp(-u)), "Color", cMain, "LineWidth", 2), hold on
+plot(u, tanh(u), "Color", cCool, "LineWidth", 2)
+plot(u, max(u,0), "Color", cWarm, "LineWidth", 2), hold off
+grid on, ylim([-1.2 2])
+legend(["シグモイド 1/(1+e^{-{\itu}})", "tanh {\itu}", "ReLU max(0,{\itu})"], "Location", "northwest", "Interpreter", "tex")
+xlabel("{\itu}"), ylabel("\phi({\itu})"), set(gca, "FontSize", 12)
+exportgraphics(gca, fullfile(resfolder,"vie-14-activation.png"), "Resolution", 150, "Width", 9, "Height", 6.5, "Units", "centimeters")
+%[text] 入力 $ \\mathbf{x}=(2\\ \\ 1)^\\top $ ，重み $ \\mathbf{w}=(0.5\\ \\ -1)^\\top $ ，バイアス $ b=0.2 $ のニューロン： $ u=\\mathbf{w}^\\top\\mathbf{x}+b $ 。
 w = [0.5 -1]; x = [2; 1]; b = 0.2;
 un = w*x + b
 out = [1/(1+exp(-un)) tanh(un) max(un,0)]
@@ -157,36 +224,55 @@ vie.savetex("vie-14-neuron-tanh", sprintf("%.3f", out(2)));
 vie.savetex("vie-14-neuron-relu", sprintf("%.1f", out(3)));
 %%
 %[text] ## 教師あり学習と誤差逆伝播法：XOR の学習
-%[text] 入力 2，中間層 4（tanh），出力 1（シグモイド）のネットワークを，二乗誤差 $ E=\\sum\_n(\\hat{y}\_n-y\_n)^2 $ の最急降下法で学習する。勾配は出力層から入力層へ順に（誤差逆伝播法）求める。
-Xx = [0 0 1 1; 0 1 0 1];                         % 入力（列が 1 事例）
-yx = [0 1 1 0];                                  % 教師出力（XOR）
+%[text] 入力 2，中間層 4（ $ \\phi^{(1)}(\\cdot)=\\tanh(\\cdot) $ ），出力 1（ $ \\phi^{(2)}(\\cdot) $ ：シグモイド関数）の $ T=2 $ 層のネットワーク $ \\mathbf{f}\_{\\boldsymbol{\\Theta}} $ を，入力と参照データの $ S=4 $ 組の事例で学習する。学習パラメータは $ \\boldsymbol{\\Theta}=\\{\\mathbf{W}^{(t)},\\mathbf{b}^{(t)}\\}\_{t=1}^{2} $ 。
+%[text] 損失関数は教科書 10.1.1 項の（1/2 倍した）平均二乗誤差
+%[text] $ \\mathfrak{L}(\\boldsymbol{\\Theta})=\\frac{1}{2}\\left(\\frac{1}{S}\\sum\_{n=1}^{S}\\|\\mathbf{x}\_\\star^{\[n\]}-\\mathbf{f}\_{\\boldsymbol{\\Theta}}(\\mathbf{v}^{\[n\]})\\|\_2^2\\right) $
+%[text] とする。事例 $ n $ の損失 $ \\mathfrak{L}^{\[n\]}(\\boldsymbol{\\Theta})=\\frac{1}{2}\\|\\mathbf{x}\_\\star^{\[n\]}-\\mathbf{x}^{(2)}\\|\_2^2 $ の勾配を出力層から入力層へ順に求め（誤差逆伝播法），その平均 $ \\nabla\\mathfrak{L}(\\boldsymbol{\\Theta})=\\frac{1}{S}\\sum\_{n=1}^{S}\\nabla\\mathfrak{L}^{\[n\]}(\\boldsymbol{\\Theta}) $ を使って最急降下法 $ \\mathbf{W}^{(t)}\\leftarrow\\mathbf{W}^{(t)}-\\eta\\nabla\_{\\mathbf{W}^{(t)}}\\mathfrak{L}(\\boldsymbol{\\Theta}) $ で更新する（全事例をまとめて使うバッチ学習）。
+%[text] **ステップサイズ** $ \\eta $ **の選び方**：損失 $ \\mathfrak{L} $ は二乗誤差の総和 $ \\sum\_n\\|\\cdot\\|\_2^2 $ の $ 1/(2S)=1/8 $ 倍なので，勾配も 1/8 倍になる。最急降下法が振動・発散しない目安は，損失のヘッセ行列の最大固有値 $ \\lambda\_\\mathrm{max} $ に対して $ \\eta<2/\\lambda\_\\mathrm{max} $ である。下で確かめるように学習中は $ \\lambda\_\\mathrm{max}<0.3 $ なので（ $ 2/\\lambda\_\\mathrm{max}>6.6 $ ），余裕をもって $ \\eta=4 $ とする。
+Xx = [0 0 1 1; 0 1 0 1];                         % 入力 v^[n]（列が 1 事例）
+yx = [0 1 1 0];                                  % 参照データ x_*^[n]（XOR）
+S = size(Xx, 2);                                 % 事例数 S = 4
 rng(3)
-W1 = randn(4,2); b1 = zeros(4,1); W2 = randn(1,4); b2 = 0;
-eta = 0.5; nEpoch = 3000; Ehist = zeros(1,nEpoch);
+W1 = randn(4,2); b1 = zeros(4,1); W2 = randn(1,4); b2 = 0;   % 学習パラメータの初期値
+eta = 4; nEpoch = 3000;                          % ステップサイズと反復回数
+Lhist = zeros(1, nEpoch);
+kChk = 1:100:nEpoch;                             % ヘッセ行列を調べる反復
+lamMax = zeros(size(kChk));
 for ep = 1:nEpoch
-    H = tanh(W1*Xx + b1);                        % 順伝播：中間層
-    Y = 1./(1 + exp(-(W2*H + b2)));              % 順伝播：出力層
-    Ehist(ep) = sum((Y - yx).^2);
-    dY = 2*(Y - yx).*Y.*(1 - Y);                 % 逆伝播：出力層の誤差
-    dH = (W2'*dY).*(1 - H.^2);                   % 逆伝播：中間層の誤差
-    W2 = W2 - eta*dY*H';  b2 = b2 - eta*sum(dY); % 重み係数の更新
-    W1 = W1 - eta*dH*Xx'; b1 = b1 - eta*sum(dH,2);
+    if any(ep == kChk)
+        lamMax(ep == kChk) = xorhessmax([W1(:); b1; W2(:); b2], Xx, yx);
+    end
+    H = tanh(W1*Xx + b1);                        % 順伝播：中間層の出力 x^(1)
+    Y = 1./(1 + exp(-(W2*H + b2)));              % 順伝播：出力層の出力 x^(2)
+    Lhist(ep) = 0.5*mean(sum((yx - Y).^2, 1));   % 損失 L(Θ) = (1/2)(1/S)Σ||x_*^[n] - x^(2)||^2
+    dY = (Y - yx).*Y.*(1 - Y);                   % 逆伝播：出力層の誤差 δ^(2)（事例ごと）
+    dH = (W2'*dY).*(1 - H.^2);                   % 逆伝播：中間層の誤差 δ^(1)（事例ごと）
+    W2 = W2 - eta*(dY*H')/S;   b2 = b2 - eta*sum(dY)/S;      % ∇_{W^(2)}L = (1/S)Σ_n δ^(2) (x^(1))^T
+    W1 = W1 - eta*(dH*Xx')/S;  b1 = b1 - eta*sum(dH,2)/S;    % ∇_{W^(1)}L = (1/S)Σ_n δ^(1) (x^(0))^T
 end
 Yfinal = 1./(1 + exp(-(W2*tanh(W1*Xx + b1) + b2)))
-Efinal = Ehist(end)
+Lfinal = 0.5*mean(sum((yx - Yfinal).^2, 1))
+%[text] 学習中のヘッセ行列の最大固有値と，ステップサイズの条件 $ \\eta<2/\\lambda\_\\mathrm{max} $ の確認。
+lamMaxMax = max(lamMax)
+assert(eta < 2/lamMaxMax, "ステップサイズが大きすぎる")
+%[text] 学習曲線（損失 $ \\mathfrak{L}(\\boldsymbol{\\Theta}) $ の推移，縦軸は対数）。
+frakL = char([0xD835 0xDD0F]);                   % 𝔏（U+1D50F）
 clf
-semilogy(Ehist, "LineWidth", 2), grid on, xlabel("反復回数"), ylabel("誤差 E"), set(gca, "FontSize", 13)
-exportgraphics(gca, fullfile(resfolder,"vie-14-xor-loss.png"), "Resolution", 110)
+semilogy(0:nEpoch-1, Lhist, "Color", cMain, "LineWidth", 2), grid on
+ylim([1e-5 1]), yticks(10.^(-5:0))
+xlabel("反復回数"), ylabel("損失 " + frakL + "({\bf\Theta})"), set(gca, "FontSize", 12)
+exportgraphics(gca, fullfile(resfolder,"vie-14-xor-loss.png"), "Resolution", 150, "Width", 9, "Height", 6, "Units", "centimeters")
 vie.savetex("vie-14-xor-y", strjoin(compose("%.2f", Yfinal), ",\ "));
-vie.savetex("vie-14-xor-e0", sprintf("%.2f", Ehist(1)));
-vie.savetex("vie-14-xor-e", sprintf("%.4f", Efinal));
+vie.savetex("vie-14-xor-e0", sprintf("%.3f", Lhist(1)));
+vie.savetex("vie-14-xor-e", sci2tex(Lfinal));
+vie.savetex("vie-14-xor-eta", sprintf("%g", eta));
 %%
 %[text] ## 畳み込み層とプーリング層
 %[text] 4 種類のフィルタ（フィルタバンク）で畳み込み，ReLU を施し， $ 2\\times2 $ の最大値プーリングで縮小した特徴マップを並べる。
 Xg = im2double(imread("cameraman.tif"));
 imwrite(Xg, fullfile(resfolder,"vie-14-fmap-in.png"))
 % 水平差分（Sobel），垂直差分（Sobel），ラプラシアン，符号反転したラプラシアン
-Fk ={[-1 0 1; -2 0 2; -1 0 1], [-1 -2 -1; 0 0 0; 1 2 1], [0 1 0; 1 -4 1; 0 1 0], -[0 1 0; 1 -4 1; 0 1 0]};
+Fk = {[-1 0 1; -2 0 2; -1 0 1], [-1 -2 -1; 0 0 0; 1 2 1], [0 1 0; 1 -4 1; 0 1 0], -[0 1 0; 1 -4 1; 0 1 0]};
 maps = cell(1,4);
 for i = 1:4
     Z = max(imfilter(Xg, Fk{i}, "replicate"), 0);                        % 畳み込み＋ReLU
@@ -199,8 +285,34 @@ montage(maps, "Size", [1 4])
 %[text] ## まとめ
 %[text] - パターン認識は特徴抽出と識別（識別辞書との照合）からなる。最近傍決定則は最も近い代表ベクトルのクラスを出力する
 %[text] - ハリスのコーナー検出，キャニーの輪郭線検出，ハフ変換はガウシアンフィルタと勾配フィルタ（第5回）を土台にする
-%[text] - ニューラルネットワークは重み付け和と活性化関数の多層構造で，誤差逆伝播法で学習する。畳み込み層はフィルタバンクに相当する \
+%[text] - ニューラルネットワークは重み付け和と活性化関数の多層構造で，損失関数（1/2 倍した平均二乗誤差）の勾配を誤差逆伝播法で求めて学習する。畳み込み層はフィルタバンクに相当する \
 %[text] © Copyright, Shogo MURAMATSU, All rights reserved.
+function lam = xorhessmax(th, V, Xs)
+% XOR ネットワークの損失 L(Θ) のヘッセ行列の最大固有値．
+% 勾配 xorgrad の中心差分でヘッセ行列を数値的に求める．th はパラメータを縦に並べたもの．
+K = numel(th); Hs = zeros(K); h = 1e-5;
+for i = 1:K
+    e = zeros(K,1); e(i) = h;
+    Hs(:,i) = (xorgrad(th+e, V, Xs) - xorgrad(th-e, V, Xs))/(2*h);
+end
+lam = max(eig((Hs + Hs')/2));
+end
+
+function g = xorgrad(th, V, Xs)
+% XOR ネットワーク（入力 2，中間層 4，出力 1）の損失 L(Θ) の勾配（誤差逆伝播法）．
+% th = [W1(:); b1; W2(:); b2]，V は入力（列が 1 事例），Xs は参照データ．
+S = size(V, 2);
+W1 = reshape(th(1:8), 4, 2); b1 = th(9:12); W2 = reshape(th(13:16), 1, 4); b2 = th(17);
+H = tanh(W1*V + b1); Y = 1./(1 + exp(-(W2*H + b2)));
+dY = (Y - Xs).*Y.*(1 - Y); dH = (W2'*dY).*(1 - H.^2);
+g = [reshape(dH*V', [], 1); sum(dH, 2); reshape(dY*H', [], 1); sum(dY)]/S;
+end
+
+function s = sci2tex(v)
+% 正の数 v を「仮数\times10^{指数}」の LaTeX 文字列にする（数式モードで使う）．
+e = floor(log10(v));
+s = sprintf("%.1f\\times10^{%d}", v/10^e, e);
+end
 
 %[appendix]{"version":"1.0"}
 %---
