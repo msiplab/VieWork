@@ -104,10 +104,10 @@ imwrite(Ys, fullfile(resfolder,"vie-06-out-sym.png"))
 imwrite(imresize(Yz(1:40,1:40,:), 3, "nearest"), fullfile(resfolder,"vie-06-out-zero-zoom.png"))
 imwrite(imresize(Ys(1:40,1:40,:), 3, "nearest"), fullfile(resfolder,"vie-06-out-sym-zoom.png"))
 %[text] 左上隅の画素の明るさ（R 成分）を比べると，零値拡張では暗くなる。
-corner = [Xc(1,1,1) Yz(1,1,1) Ys(1,1,1)]
-vie.savetex("vie-06-corner-org", sprintf("%.2f",corner(1)));
-vie.savetex("vie-06-corner-z",   sprintf("%.2f",corner(2)));
-vie.savetex("vie-06-corner-s",   sprintf("%.2f",corner(3)));
+cornerv = [Xc(1,1,1) Yz(1,1,1) Ys(1,1,1)]
+vie.savetex("vie-06-corner-org", sprintf("%.2f",cornerv(1)));
+vie.savetex("vie-06-corner-z",   sprintf("%.2f",cornerv(2)));
+vie.savetex("vie-06-corner-s",   sprintf("%.2f",cornerv(3)));
 %%
 %[text] ## 内積・ノルム・距離・コサイン類似度
 %[text] 教科書の例。二つの配列の内積，ノルム，距離，コサイン類似度，二乗誤差和。

@@ -58,11 +58,11 @@ end
 title("赤枠内の画素値")
 %[text] スライド用には，赤枠を画像に焼き込んだものを書き出す（画素値はスライド側で行列として示す）。
 Xbox = repmat(X,[1 1 3]);
-edge = false(size(X));
-edge(r0-1:r0+w, [c0-1 c0+w]) = true;
-edge([r0-1 r0+w], c0-1:c0+w) = true;
-Xbox(repmat(edge,[1 1 3])) = 0;
-Xbox(:,:,1) = Xbox(:,:,1) + uint8(edge)*255;
+boxmask = false(size(X));
+boxmask(r0-1:r0+w, [c0-1 c0+w]) = true;
+boxmask([r0-1 r0+w], c0-1:c0+w) = true;
+Xbox(repmat(boxmask,[1 1 3])) = 0;
+Xbox(:,:,1) = Xbox(:,:,1) + uint8(boxmask)*255;
 imwrite(imresize(Xbox,2,"nearest"), fullfile(resfolder,"vie-01-image.png"))
 %%
 %[text] ## 信号の解析（一次元）：近似成分と詳細成分

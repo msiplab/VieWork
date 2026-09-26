@@ -151,10 +151,10 @@ vie.savetex("vie-10-sp-clean", sprintf("%.0f", 100*sp(1)));
 vie.savetex("vie-10-sp-noisy", sprintf("%.0f", 100*sp(2)));
 %%
 %[text] ## 画像データについての事前知識：詳細成分のヒストグラム
-det = [Hc(:); Vc(:); Dc(:)];
+dcoef = [Hc(:); Vc(:); Dc(:)];
 clf
-histogram(det, -1:0.01:1, "Normalization", "pdf", "EdgeColor","none"), hold on
-b = mean(abs(det));                             % ラプラス分布の尺度（平均絶対値）
+histogram(dcoef, -1:0.01:1, "Normalization", "pdf", "EdgeColor","none"), hold on
+b = mean(abs(dcoef));                             % ラプラス分布の尺度（平均絶対値）
 ss = linspace(-1, 1, 801);
 plot(ss, exp(-abs(ss)/b)/(2*b), "r", "LineWidth", 2), hold off
 xlim([-0.5 0.5]), xlabel("係数の値"), ylabel("確率密度"), legend(["ハール詳細成分","ラプラス分布"])
