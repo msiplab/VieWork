@@ -23,11 +23,19 @@ function [datfolder,resfolder,prjroot] = prjfolders()
 % All rights reserved.
 %
 
+prjroot = "";
 try
     prj = matlab.project.currentProject;
-    prjroot = string(prj.RootFolder);
+    % プロジェクトが開かれていないと，エラーにならずに空のプロジェクトが
+    % 返ることがある（RootFolder が空）。その場合は下のフォールバックに回す。
+    if ~isempty(prj) && strlength(string(prj.RootFolder)) > 0 ...
+            && isfile(fullfile(prj.RootFolder,"VieWork.prj"))
+        prjroot = string(prj.RootFolder);
+    end
 catch
-    % プロジェクトが開かれていないときはファイル位置から推定する。
+end
+if strlength(prjroot) == 0
+    % ファイル位置から推定する。
     % このファイルは <root>/code/matlab/+vie/prjfolders.m にある。
     here = fileparts(mfilename("fullpath"));            % .../code/matlab/+vie
     prjroot = string(fileparts(fileparts(fileparts(here))));
