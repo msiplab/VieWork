@@ -35,16 +35,42 @@ vie.download_img
 あとは各回のスクリプトを実行してください。
 
 ```matlab
-vie_sec02_resolution   % 第2回 解像度
+vie_sec04_pixel        % 第4回 画素処理
 ```
 
+| 回 | スクリプト | 回 | スクリプト |
+|---|---|---|---|
+| 01 | `vie_sec01_intro` | 08 | `vie_sec08_resampling` |
+| 02 | `vie_sec02_vision` | 09 | `vie_sec09_transform` |
+| 03 | `vie_sec03_color` | 10 | `vie_sec10_restoration` |
+| 04 | `vie_sec04_pixel` | 11 | `vie_sec11_motion` |
+| 05 | `vie_sec05_neighbor` | 12 | `vie_sec12_coding` |
+| 06 | `vie_sec06_boundary` | 13 | `vie_sec13_binary` |
+| 07 | `vie_sec07_fourier` | 14 | `vie_sec14_recognition` |
+
 - スクリプト名 `vie_secNN_<主題>.m` は講義の第 NN 回に対応します。
+- スライドに書ききれない計算の過程や補足を、コメントとして詳しく書いています。スライドの例題の数値や図はすべてこのスクリプトの出力です。
 - ライブスクリプトはプレーンテキスト Live Code 形式（`.m`）で保存しています（要 MATLAB R2025a 以降）。
 - 出力は `results/`、入力データは `data/` に置かれます。パスは `vie.prjfolders` で解決してください。
 
 ```matlab
 [datfolder,resfolder] = vie.prjfolders();
 ```
+
+### スライドとの連携
+
+各スクリプトは `results/` に図 `vie-NN-*.png` と数値 `vie-NN-*.tex` を書き出します。
+講義スライド（VieSlides）はこれを `tools/sync-results.ps1` で取り込み、
+`\includegraphics` と `\viesnippet{}` で参照します。
+
+| 関数 | 役割 |
+|---|---|
+| `vie.savetex(name, content)` | `results/<name>.tex` に LaTeX の断片を書き出す |
+| `vie.arr2tex(X, fmt)` | 行列を `a & b \\ c & d` の形に整形する |
+| `vie.fmtint(v)` | 整数を 3 桁区切り（`{,}`）で整形する |
+
+スクリプトは MATLAB の同じワークスペースで続けて実行することがあるため、
+`det`、`edge`、`corner` など組み込み関数と同じ名前の変数は使わないでください。
 
 ## Python コードの動かし方
 ソースコードにアクセスして「Open in Colab」のボタンをクリックしてください。
