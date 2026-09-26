@@ -7,7 +7,12 @@
 %[text] ## 準備
 %[text] 図と LaTeX 断片は `results` フォルダに書き出す。VieSlides 側では `tools/sync-results.ps1` でそれらを取り込む。
 [datfolder,resfolder] = vie.prjfolders();
-figw = 16; figh = 6;   % 書き出す図の大きさ [cm]（スライドの横幅に合わせる）
+figw = 16; figh = 4.8; % 書き出す図の大きさ [cm]（スライドの横幅に合わせる）
+%[text] 図の配色はスライドと揃え，ロゴの 3 色（メインの緑，寒色系の青，暖色系の橙）と灰色を使う。
+cmain = [0 136 85]/255;     % メイン（緑）#008855：図の主役
+ccool = [46 117 182]/255;   % 寒色系（青）#2E75B6：第 2 系統
+cwarm = [197 90 17]/255;    % 暖色系（橙）#C55A11：注目させたい箇所
+cgray = [0.6 0.6 0.6];      % 補助線（灰）
 %%
 %[text] ## 音声信号：一変量の関数とその標本化
 %[text] 音叉の音のように，音声信号（モノラル）は時刻 $ t $ の**一変量の関数** $ x(t) $ とみなせる。ここでは 1 秒間に 440 回振動する音（ラの音）を，少しずつ減衰する正弦波で模擬する。
@@ -18,52 +23,69 @@ tau = 0.4;          % 減衰の時定数 [s]
 fs  = 8000;         % 標本化周波数 [Hz]
 n   = 0:fs-1;       % 1 秒分の標本番号
 xn  = exp(-n/fs/tau).*sin(2*pi*f0*n/fs);
-%[text] 冒頭の 5 ms だけを拡大すると，連続な波形 $ x(t) $ の上に標本 $ x[n] $ が等間隔に並んでいるのが分かる。下段は周波数成分の時間変化（スペクトログラム）で，440 Hz に成分が集中している。「どのような成分から構成されているか」を調べるのがフーリエ解析（第7回）である。
+%[text] 冒頭の 5 ms だけを拡大すると，連続な波形 $ x(t) $（灰色）の上に標本 $ x[n] $（緑）が等間隔に並んでいるのが分かる。右は周波数成分の時間変化（スペクトログラム）で，440 Hz に成分が集中している。「どのような成分から構成されているか」を調べるのがフーリエ解析（第7回）である。
+%[text] 講義で使ったデモ（録音した声のスペクトログラムを表示する `analysisdemo`）と同じ見せ方を，録音の代わりに模擬音で再現している。
 tiledlayout(1,2,"TileSpacing","compact","Padding","compact")
 nexttile
 tc = linspace(0,5e-3,500);
-plot(tc*1e3, exp(-tc/tau).*sin(2*pi*f0*tc), "Color",[.6 .6 .6]), hold on
+plot(tc*1e3, exp(-tc/tau).*sin(2*pi*f0*tc), "Color",cgray, "LineWidth",1), hold on
 ns = 0:round(5e-3*fs);
-stem(ns/fs*1e3, xn(ns+1), "filled", "MarkerSize",3), hold off
-xlabel("時刻 [ms]"), ylabel("振幅"), title("x(t) と標本 x[n]")
+stem(ns/fs*1e3, xn(ns+1), "filled", "MarkerSize",3, "Color",cmain), hold off
+xlabel("時刻 \itt\rm [ms]"), ylabel("振幅")
+title("\itx\rm(\itt\rm) と標本 \itx\rm[\itn\rm]")
 grid on
 nexttile
 spectrogram(xn, hann(256), 192, 512, fs, "yaxis")
 ylim([0 2]), title("スペクトログラム"), colorbar off
+xlabel("時刻 \itt\rm [ms]"), ylabel("周波数 [kHz]")
 set(gcf,"Units","centimeters","Position",[2 2 figw figh])
+drawnow   % 大きさの変更を反映させてから書き出す
 exportgraphics(gcf, fullfile(resfolder,"vie-01-audio.png"), "Resolution",200)
 %%
 %[text] ## 画像信号：多変量の関数とその標本化
 %[text] 画像信号（モノクロ）は位置 $ (q\_\\mathrm{v},q\_\\mathrm{h}) $ の**多変量の関数** $ u(q\_\\mathrm{v},q\_\\mathrm{h}) $ とみなせる。標本化すると**配列（画素配列）** $ x[n\_\\mathrm{v},n\_\\mathrm{h}] $ が得られる。
-X = imread("cameraman.tif");      % Image Processing Toolbox 付属の 256×256, 8 bit 画像
+X = imread("cameraman.tif");      % Image Processing Toolbox 付属の 8 bit グレースケール画像
 sz = size(X)
-%[text] 画像の一部（顔のあたり）を切り出して数値を見る。画像は数の並びにすぎない。
-r0 = 60; c0 = 110; w = 5;         % 切り出す位置と大きさ
+%[text] 一配列要素あたりのビット数 $ \\beta $ は，変数の占めるバイト数（`whos`）を要素数で割れば分かる（講義のデモ `dataamount` と同じ確かめ方）。
+whosX  = whos("X");
+bitsX = 8*whosX.bytes/numel(X)     % 8 bits（uint8 型）
+vie.savetex("vie-01-image-size", sprintf("$%d\\times%d$", sz(1), sz(2)));
+vie.savetex("vie-01-image-bits", sprintf("%d", bitsX));
+%[text] 画像の一部（顔のあたり）を切り出して数値を見る。画像は数の並びにすぎない。MATLAB の添字は 1 から始まるが，教科書の配列 $ x[n\_\\mathrm{v},n\_\\mathrm{h}] $ の添字は 0 から始まるので，位置は 1 を引いて示す。
+r0 = 60; c0 = 110; w = 5;         % 切り出す位置（MATLAB の添字）と大きさ
 blk = X(r0:r0+w-1, c0:c0+w-1)
 vie.savetex("vie-01-pixels", "\begin{bmatrix}" + vie.arr2tex(double(blk),"%d") + "\end{bmatrix}");
 vie.savetex("vie-01-pixels-pos", sprintf("n_\\mathrm{v}=%d\\sim%d,\\ n_\\mathrm{h}=%d\\sim%d", r0-1, r0+w-2, c0-1, c0+w-2));
 tiledlayout(1,2,"TileSpacing","compact","Padding","compact")
 nexttile
 imshow(X), hold on
-rectangle("Position",[c0-0.5 r0-0.5 w w],"EdgeColor","r","LineWidth",1.5), hold off
-title("256×256 画素")
+rectangle("Position",[c0-0.5 r0-0.5 w w],"EdgeColor",cwarm,"LineWidth",1.5), hold off
+title(sprintf("%d×%d 画素", sz(1), sz(2)))
 nexttile
 imshow(imresize(blk, 40, "nearest"))
 for i = 1:w
     for j = 1:w
         text((j-0.5)*40, (i-0.5)*40, string(blk(i,j)), ...
-            "HorizontalAlignment","center", "Color","r", "FontSize",9)
+            "HorizontalAlignment","center", "Color",cwarm, "FontSize",9)
     end
 end
-title("赤枠内の画素値")
-%[text] スライド用には，赤枠を画像に焼き込んだものを書き出す（画素値はスライド側で行列として示す）。
-Xbox = repmat(X,[1 1 3]);
-boxmask = false(size(X));
-boxmask(r0-1:r0+w, [c0-1 c0+w]) = true;
-boxmask([r0-1 r0+w], c0-1:c0+w) = true;
-Xbox(repmat(boxmask,[1 1 3])) = 0;
-Xbox(:,:,1) = Xbox(:,:,1) + uint8(boxmask)*255;
-imwrite(imresize(Xbox,2,"nearest"), fullfile(resfolder,"vie-01-image.png"))
+title("橙枠内の画素値")
+%[text] スライド用には，枠を画像に焼き込んだものを書き出す（画素値はスライド側で行列として示す）。スライド上で見えるよう，画像を 2 倍に拡大してから，切り出した範囲の外側に太さ 4 画素の橙色の枠を描く。
+k   = 2;                                   % 書き出す画像の拡大率
+lw  = 4;                                   % 枠の太さ（拡大後の画素数）
+Xk  = imresize(X, k, "nearest");
+rin = (r0-1)*k+1 : (r0+w-1)*k;             % 拡大後の画像で切り出した範囲（行）
+cin = (c0-1)*k+1 : (c0+w-1)*k;             % 同（列）
+boxmask = false(size(Xk));
+boxmask(rin(1)-lw:rin(end)+lw, cin(1)-lw:cin(end)+lw) = true;
+boxmask(rin, cin) = false;                 % 内側は残して枠だけにする
+Xbox = repmat(Xk,[1 1 3]);
+for ch = 1:3
+    plane = Xbox(:,:,ch);
+    plane(boxmask) = round(255*cwarm(ch));
+    Xbox(:,:,ch) = plane;
+end
+imwrite(Xbox, fullfile(resfolder,"vie-01-image.png"))
 %%
 %[text] ## 信号の解析（一次元）：近似成分と詳細成分
 %[text] 前回スライドの例を計算する。信号 $ x[n] $ に対し，**隣同士を足して 2 で割る**と近似成分 $ a[n] $，**右隣を引いて 2 で割る**と詳細成分 $ d[n] $ が得られる。
@@ -83,11 +105,19 @@ vie.savetex("vie-01-haar-d",   vie.arr2tex(d));
 xr = a + d
 isequal(xr, x(1:end-1))
 vie.savetex("vie-01-haar-rec", vie.arr2tex(xr));
+%[text] 近似成分を緑，詳細成分を青，両者の和を橙で描く。和の図には元の信号 $ x[n] $ を灰色の白抜きの丸で重ね，一致することを示す。
 tiledlayout(1,3,"TileSpacing","compact","Padding","compact")
-nexttile, stem(0:numel(a)-1, a, "filled"), ylim([-3 6]), grid on, title("近似成分 a[n]")
-nexttile, stem(0:numel(d)-1, d, "filled"), ylim([-3 6]), grid on, title("詳細成分 d[n]")
-nexttile, stem(0:numel(xr)-1, xr, "filled"), ylim([-3 6]), grid on, title("a[n]+d[n]")
+nn = 0:numel(a)-1;
+nexttile, stem(nn, a, "filled", "Color",cmain), ylim([-3 6]), grid on
+xlabel("\itn"), title("近似成分 \ita\rm[\itn\rm]")
+nexttile, stem(nn, d, "filled", "Color",ccool), ylim([-3 6]), grid on
+xlabel("\itn"), title("詳細成分 \itd\rm[\itn\rm]")
+nexttile, stem(nn, xr, "filled", "Color",cwarm), hold on
+plot(nn, x(1:end-1), "o", "Color",cgray, "MarkerSize",10, "LineWidth",1.2), hold off
+ylim([-3 6]), grid on
+xlabel("\itn"), title("\ita\rm[\itn\rm]+\itd\rm[\itn\rm]（○：\itx\rm[\itn\rm]）")
 set(gcf,"Units","centimeters","Position",[2 2 figw 4.5])
+drawnow   % 大きさの変更を反映させてから書き出す
 exportgraphics(gcf, fullfile(resfolder,"vie-01-haar.png"), "Resolution",200)
 %%
 %[text] ## フィルタバンク表現
@@ -129,52 +159,86 @@ imwrite(Xd,          fullfile(resfolder,"vie-01-dwt-a.png"))
 imwrite(min(coef,1), fullfile(resfolder,"vie-01-dwt-b.png"))
 %%
 %[text] ## データ量：静止画像
-%[text] 教科書の例（静止画像のデータ量）。 $ N\_1\\times N\_2 $ 画素，一配列要素あたり $ \\beta $ ビットのグレースケール画像の総ビット数は $ B = \\beta N\_1 N\_2 $。RGB カラー画像なら $ B = 3\\beta N\_1 N\_2 $。
-N1 = 2304; N2 = 3456;               % 約 800 万画素
-Bgray = 8*N1*N2                      % 8 bit グレースケール [bits]
-Brgb  = 3*64*N1*N2                   % 倍精度実数の RGB [bits]
-ratio = Brgb/Bgray
-vie.savetex("vie-01-still-gray",  fmtint(Bgray));
+%[text] 教科書の例「静止画像のデータ量」（1.1.2 項）。 $ N\_1\\times N\_2 $ 画素，一配列要素あたり $ \\beta $ ビットのグレースケール画像の総ビット数は $ B = \\beta N\_1 N\_2 $。RGB カラー画像なら一画素あたり $ 3\\beta $ [bpp] なので $ B = 3\\beta N\_1 N\_2 $。
+N1 = 2304; N2 = 3456;               % 画素数
+Npix = N1*N2                         % 総画素数（約 800 万画素）
+bt = 8;                            % 8-bit 符号なし整数型
+Bgray = bt*N1*N2                   % グレースケール画像 [bits]
+bt = 64;                           % 倍精度実数型
+Brgb  = 3*bt*N1*N2                 % RGB カラー画像 [bits]
+ratio = Brgb/Bgray                   % 後者は前者の何倍か
+%[text] 教科書の値（63700992 bits ≃ 8 MB，1528823808 bits ≃ 191 MB，24 倍）と一致することを確かめる。Mega は $ 10^6 $，1 byte は 8 bits とする。
+isequal([Bgray Brgb ratio], [63700992 1528823808 24])
+[round(Bgray/8/1e6) round(Brgb/8/1e6)]   % [MB]
+vie.savetex("vie-01-still-npix",  sprintf("%d", round(Npix/1e6)*100));   % 「約 800 万画素」の 800
+vie.savetex("vie-01-still-gray",  vie.fmtint(Bgray));
 vie.savetex("vie-01-still-grayMB",sprintf("%.0f", Bgray/8/1e6));
-vie.savetex("vie-01-still-rgb",   fmtint(Brgb));
+vie.savetex("vie-01-still-rgb",   vie.fmtint(Brgb));
 vie.savetex("vie-01-still-rgbMB", sprintf("%.0f", Brgb/8/1e6));
 vie.savetex("vie-01-still-ratio", sprintf("%d", ratio));
+%[text] 実際の画像データでも確かめる。講義のデモ `dataamount` と同じく，画像を読み込んで `whos` でバイト数を見る。`peppers.png` は 8-bit の RGB カラー画像で，倍精度実数型に変換すると 8 倍のバイト数になる。
+P  = imread("peppers.png");          % uint8 の RGB カラー画像
+Pd = im2double(P);                   % 倍精度実数型に変換
+szp = size(P)
+whosP  = whos("P");  whosPd = whos("Pd");
+[whosP.bytes  8*3*szp(1)*szp(2)/8]   % β = 8：whos のバイト数と 3βN1N2/8
+[whosPd.bytes 64*3*szp(1)*szp(2)/8]  % β = 64
 %%
 %[text] ## 1 秒あたりのビット数（ビットレート）
-%[text] 動画像では **画素数 × 画面数/秒 × ビット数/画素** がビットレート $ R $ [bps] になる。教科書の式 $ R = \\beta|\\Omega\_\\mathrm{S}||\\Omega\_\\mathrm{C}|\\Delta\_\\mathrm{t}^{-1} $ で，RGB 各 8 bit なら一画素 24 bit である。
+%[text] 動画像では **画素数 × 画面数/秒 × ビット数/画素** がビットレート $ R $ [bps] になる。教科書の式 $ R = \\beta|\\Omega\_\\mathrm{S}||\\Omega\_\\mathrm{C}|\\Delta\_\\mathrm{t}^{-1} $ で，RGB 各 8 bit なら一画素 24 bit である。まず前回スライドの HDTV と SDTV（いずれも 30 フレーム/秒）を計算する。
 Rhd = 1920*1080*30*24                % ハイビジョン品質（HDTV）[bps]
 Rsd = 720*480*30*24                  % アナログ放送品質（SDTV）[bps]
-R8k = 7680*4320*60*24                % 教科書の例題：8K 60p [bps]
 vie.savetex("vie-01-rate-hd",   sprintf("%.1f", Rhd/1e9));
 vie.savetex("vie-01-rate-sd",   sprintf("%.1f", Rsd/1e6));
-vie.savetex("vie-01-rate-8k",   fmtint(R8k));
-vie.savetex("vie-01-rate-8kG",  sprintf("%.0f", R8k/1e9));
+%[text] ### 教科書の例題「動画像のビットレート」
+%[text] 画素数 $ N\_1\\times N\_2 = 4320\\times 7680 $（8K），フレーム間隔 $ \\Delta\_\\mathrm{t} = 1/60 $ s，一配列要素あたり $ \\beta = 8 $ bits の RGB カラー動画像のビットレートを求める。フレームレートは $ \\Delta\_\\mathrm{t}^{-1} = 60 $ [1/s] である（ $ 1/60 $ は二進の浮動小数点数で割り切れないので，逆数のまま掛ける）。
+N1 = 4320; N2 = 7680;                % 画素数
+bt = 8;                            % 一配列要素あたりのビット数
+fps  = 60;                           % フレームレート 1/Δt [1/s]
+bpp8k = 3*bt                       % 一画素あたりのビット数 [bpp]
+N8k   = N1*N2                        % 1 フレームあたりの画素数（約 3300 万画素）
+B8k   = 3*bt*N1*N2                 % 1 フレームあたりのビット数 [bits/frame]
+R8k   = B8k*fps                      % ビットレート R = B Δt^{-1} [bps]
+%[text] 教科書の解答（24 bpp，33177600 画素，796262400 bits/frame，47775744000 bps ≃ 48 Gbps）と一致することを確かめる。
+isequal([bpp8k N8k B8k R8k], [24 33177600 796262400 47775744000])
+%[text] 教科書のサンプル（MsipWorkM の例題 1.1）と同じく，実際に 1 フレーム分の配列を作って要素数から数えても同じになる。
+frame = zeros(N1,N2,3,"uint8");      % 8K の RGB カラー 1 フレーム（約 100 MB）
+isequal(bt*numel(frame), B8k)
+clear frame
+vie.savetex("vie-01-rate-8kbpp", sprintf("%d", bpp8k));
+vie.savetex("vie-01-rate-8kB",   vie.fmtint(B8k));
+vie.savetex("vie-01-rate-8kfps", sprintf("%d", fps));
+vie.savetex("vie-01-rate-8k",    vie.fmtint(R8k));
+vie.savetex("vie-01-rate-8kG",   sprintf("%.0f", R8k/1e9));
+%[text] ### 地上デジタル放送との比較
 %[text] 地上デジタル放送では HDTV を約 14 Mbps，SDTV を約 4 Mbps で送る（前回スライドの値）。圧縮前と比べると次のとおり。
 Rdtv = [14e6 4e6];
 cr   = [Rhd Rsd]./Rdtv               % 何分の一に圧縮しているか
+vie.savetex("vie-01-dtv-hd", sprintf("%.0f", Rdtv(1)/1e6));
+vie.savetex("vie-01-dtv-sd", sprintf("%.0f", Rdtv(2)/1e6));
 vie.savetex("vie-01-cr-hd", sprintf("%.0f", cr(1)));
 vie.savetex("vie-01-cr-sd", sprintf("%.0f", cr(2)));
-clf   % 直前の tiledlayout を消してから描く
-barh(categorical(["SDTV 地デジ","SDTV 圧縮前","HDTV 地デジ","HDTV 圧縮前"], ...
-     ["SDTV 地デジ","SDTV 圧縮前","HDTV 地デジ","HDTV 圧縮前"]), ...
-     [Rdtv(2) Rsd Rdtv(1) Rhd]/1e6)
-xlabel("ビットレート [Mbps]"), grid on
-set(gca,"FontSize",13)
-set(gcf,"Units","centimeters","Position",[2 2 figw 5])
+%[text] 圧縮前を青，地デジを緑の横棒で比べる。棒の右端に値を添える。
+figure   % 新しい図に描く
+barlabels = ["SDTV 地デジ","SDTV 圧縮前","HDTV 地デジ","HDTV 圧縮前"];
+vals   = [Rdtv(2) Rsd Rdtv(1) Rhd]/1e6;  % [Mbps]
+hb = barh(1:4, vals, 0.6, "FaceColor","flat", "EdgeColor","none");
+hb.CData = [cmain; ccool; cmain; ccool];
+text(vals+30, 1:4, compose("%.0f Mbps", vals), "FontSize",12, "VerticalAlignment","middle")
+yticks(1:4), yticklabels(barlabels), ylim([0.4 4.6])
+xlim([0 2100]), xlabel("ビットレート [Mbps]"), grid on
+set(gca,"FontSize",12)
+set(gcf,"Units","centimeters","Position",[2 2 12 4.2])
+drawnow   % 大きさの変更を反映させてから書き出す
 exportgraphics(gcf, fullfile(resfolder,"vie-01-bitrate.png"), "Resolution",200)
 %%
 %[text] ## まとめ
 %[text] - 音声は一変量の関数，画像は多変量の関数。標本化すると数列・配列になる
 %[text] - 足し算と引き算だけで，信号を近似成分と詳細成分に分解・合成できる
 %[text] - 画像を変換すると，係数のほとんどが零に近くなる（スパースな表現）
+%[text] - データ量は $ B=\\beta N\_1N\_2 $（RGB なら $ 3\\beta N\_1N\_2 $），ビットレートは $ R=B\\Delta\_\\mathrm{t}^{-1} $
 %[text] - 非圧縮の映像は Gbps 級。放送では 1/100 程度に圧縮している \
 %%
-%[text] ## 【関数定義】
-function s = fmtint(v)
-% 整数を 3 桁ごとにカンマで区切った文字列にする（LaTeX 用）
-s = string(sprintf("%d", round(v)));
-s = regexprep(s, "(\d)(?=(\d{3})+$)", "$1{,}");
-end
 %[text] © Copyright, Shogo MURAMATSU, All rights reserved.
 
 %[appendix]{"version":"1.0"}
