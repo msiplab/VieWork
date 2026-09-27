@@ -119,12 +119,12 @@ vie.savetex("vie-11-sad-window", "\def\viesadwindow{" + rows2list(win) + "}");
 vie.savetex("vie-11-sad-mhat", "\def\viesadmv{" + mhat(1) + "}\def\viesadmh{" + mhat(2) + "}");
 %%
 %[text] ## 動き推定の例（ブロックサイズ 16×16）
-%[text] 静止した背景の上を，模様のある正方形と明るい円が 1 フレームあたり $ [2\\ \\ 2]^\\top $ 画素（垂直，水平とも +2，右下向き）動く 2 フレームを作る。現フレーム $ \\mathsf{x}\_{n\_\\mathrm{t}} $ を $ 16\\times16 $ のブロックに分け，前フレーム $ \\mathsf{x}\_{m\_\\mathrm{t}} $ （ $ m\_\\mathrm{t}=n\_\\mathrm{t}-1 $ ）の $ \\pm7 $ 画素の範囲を全探索する。
+%[text] 静止した背景（参考資料のサンプル画像 msipimg05「石像の顔」をグレースケールで $ 256\\times256 $ に縮小し，物体が目立つよう濃淡を $ 0.25+0.45x $ に狭めたもの）の上を，模様のある正方形（msipimg07「モンブラン」の中央を切り出して $ 48\\times48 $ に縮小したもの，細い線状の模様がある）と明るい円が 1 フレームあたり $ [2\\ \\ 2]^\\top $ 画素（垂直，水平とも +2，右下向き）動く 2 フレームを作る。現フレーム $ \\mathsf{x}\_{n\_\\mathrm{t}} $ を $ 16\\times16 $ のブロックに分け，前フレーム $ \\mathsf{x}\_{m\_\\mathrm{t}} $ （ $ m\_\\mathrm{t}=n\_\\mathrm{t}-1 $ ）の $ \\pm7 $ 画素の範囲を全探索する。
 %[text] 教科書の SAD の定義では $ \\boldsymbol{m} $ は参照フレーム内で一致する位置へのずれなので，物体が $ [2\\ \\ 2]^\\top $ 動いたブロックでは $ \\hat{\\boldsymbol{m}}\_b=[-2\\ \\ -2]^\\top $ （物体の移動と逆向き）が得られる。
-rng(0)
 M = 256;
-bg = imgaussfilt(rand(M), 2); bg = 0.3 + 0.4*mat2gray(bg);   % 背景（静止）
-tex = mat2gray(imgaussfilt(rand(40), 1));                    % 正方形の模様
+bg = 0.25 + 0.45*im2double(vie.msipimg(5, M, "gray"));     % 背景（静止）：石像の顔，濃淡を狭める
+Xm = im2double(vie.msipimg(7, 512, "gray"));                % モンブラン
+tex = imresize(Xm(217:296, 217:296), [48 48]);              % 正方形の模様（中央 80×80 を縮小）
 [X1, Y1] = meshgrid(1:M);
 dmov = [2 2];                                % 物体の 1 フレームあたりの移動 [垂直 水平]
 frame = @(s) insertobj(bg, tex, [60 110] + s, [170 110] + s, X1, Y1);
@@ -171,9 +171,9 @@ vie.savetex("vie-11-bm-range", sprintf("%d", R));
 vie.savetex("vie-11-bm-count", sprintf("%d^2=%d", 2*R+1, nsearch));
 %%
 %[text] ## 位相限定相関（POC）
-%[text] cameraman.tif を $ \\boldsymbol{n}\_0=[-3\\ \\ 5]^\\top $ 画素（垂直，水平）ずらした画像 $ y[\\boldsymbol{n}]=x[\\boldsymbol{n}-\\boldsymbol{n}\_0] $ との POC を計算する。テンプレート $ \\mathsf{v} $ を元の画像， $ \\mathsf{x} $ をずらした画像とすると，クロススペクトル $ \\overline{V}X $ を振幅で正規化して逆変換した POC 配列は，ラグ $ \\boldsymbol{\\ell}=\\boldsymbol{n}\_0 $ に鋭いピークをもつ。
+%[text] 参考資料のサンプル画像 msipimg05（石像の顔，グレースケール， $ 256\\times256 $ に縮小）を $ \\boldsymbol{n}\_0=[-3\\ \\ 5]^\\top $ 画素（垂直，水平）ずらした画像 $ y[\\boldsymbol{n}]=x[\\boldsymbol{n}-\\boldsymbol{n}\_0] $ との POC を計算する。テンプレート $ \\mathsf{v} $ を元の画像， $ \\mathsf{x} $ をずらした画像とすると，クロススペクトル $ \\overline{V}X $ を振幅で正規化して逆変換した POC 配列は，ラグ $ \\boldsymbol{\\ell}=\\boldsymbol{n}\_0 $ に鋭いピークをもつ。
 rng(1)
-Xc = im2double(imread("cameraman.tif"));
+Xc = im2double(vie.msipimg(5, 256, "gray"));   % 石像の顔
 n0 = [-3 5];                                 % 与えるずれ [垂直 水平]
 Xs = circshift(Xc, n0) + 0.01*randn(size(Xc));   % y[n] = x[n - n0]（巡回）に少し雑音を加える
 Rc = conj(fft2(Xc)).*fft2(Xs);               % クロススペクトル conj(V) X
