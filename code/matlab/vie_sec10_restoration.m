@@ -132,38 +132,18 @@ imwrite(min(max(V,0),1), fullfile(resfolder,"vie-10-obs.png"))
 imwrite(min(max(0.5+Wn*4,0),1), fullfile(resfolder,"vie-10-noise.png"))
 vie.savetex("vie-10-psnr-obs", sprintf("%.2f", psnrV));
 %%
-%[text] ## 最小二乗法の数値例
-%[text] 一つの値 $ x $ を 3 回測った観測 $ \\mathbf{v}=(1.2,0.9,0.9)^\\top $ ， $ \\mathbf{H}=(1,1,1)^\\top $ 。正規方程式 $ \\mathbf{H}^\\top\\mathbf{H}x=\\mathbf{H}^\\top\\mathbf{v} $ の解は平均値。
+%[text] ## 勾配降下法（GD 法）の概念図
+%[text] 前回スライドの手描きの図（評価関数のグラフ上で反復が最小値解に近づく）を描き直す。図のための一次元の評価関数 $ \\mathfrak{J}(x)=\\frac12\\|\\mathbf{v}-\\mathbf{H}x\\|\_2^2 $ （ $ \\mathbf{H}=(1,1,1)^\\top $ ， $ \\mathbf{v}=(1.2,0.9,0.9)^\\top $ ）に GD 法 $ x^{(t+1)}=x^{(t)}-\\eta\\,\\mathbf{H}^\\top(\\mathbf{H}x^{(t)}-\\mathbf{v}) $ （ $ \\eta=0.2 $ ， $ x^{(0)}=0 $ ）を適用する。数値はスライドに載せない。
 Hm = [1;1;1]; vm = [1.2;0.9;0.9];
-HtH = Hm'*Hm                                    % H^T H
-Htv = Hm'*vm                                    % H^T v
-xls = HtH\Htv
-xpinv = pinv(Hm)*vm                             % ムーア・ペンローズ擬似逆行列でも同じ
-vie.savetex("vie-10-ls-H", vie.arr2tex(Hm, "%g"));
-vie.savetex("vie-10-ls-v", vie.arr2tex(vm, "%.1f"));
-vie.savetex("vie-10-ls-hth", sprintf("%g", HtH));
-vie.savetex("vie-10-ls-htv", sprintf("%.1f", Htv));
-vie.savetex("vie-10-ls-x", sprintf("%g", xls));
-%%
-%[text] ## 勾配降下法（GD 法）の数値例
-%[text] 同じ例に GD 法 $ x^{(t+1)}=x^{(t)}-\\eta\\,\\mathbf{H}^\\top(\\mathbf{H}x^{(t)}-\\mathbf{v}) $ （ $ \\lambda=0 $ ， $ \\eta=0.2 $ ， $ x^{(0)}=0 $ ）を適用する。評価関数 $ \\mathfrak{J}(x)=\\frac12\\|\\mathbf{v}-\\mathbf{H}x\\|\_2^2 $ は反復ごとに減少し，最小値解 $ \\hat{x}=1 $ に近づく。
-%[text] ステップサイズの条件は $ \\eta\\in(0,2/\\|\\mathbf{H}\\|\_\\mathrm{S}^2) $ 。この例では $ \\|\\mathbf{H}\\|\_\\mathrm{S}^2=\\mathbf{H}^\\top\\mathbf{H}=3 $ なので $ \\eta<2/3 $ 。誤差 $ x^{(t)}-\\hat{x} $ は 1 回の反復で $ 1-\\eta\\mathbf{H}^\\top\\mathbf{H} $ 倍になる。
+xls = (Hm'*Hm)\(Hm'*vm)                        % 最小値解（正規方程式の解）
 etaLs = 0.2; nStep = 6;
 Jls = @(x) 0.5*sum((vm - Hm*x).^2);             % 評価関数 J(x)
 xgd = zeros(1, nStep+1);                        % x^(0), x^(1), ..., x^(nStep)
 for t = 1:nStep
     xgd(t+1) = xgd(t) - etaLs*Hm'*(Hm*xgd(t) - vm);
 end
-xgd
 Jgd1 = arrayfun(Jls, xgd)                       % 評価関数の値（単調に減少）
-Jmin = Jls(xls)
-hs2 = norm(Hm)^2                                % スペクトルノルムの二乗 ||H||_S^2
-rho = 1 - etaLs*HtH                             % 誤差が 1 回で何倍になるか
-vie.savetex("vie-10-gd", strjoin(compose("%.3f", xgd(1:5)), ",\ "));        % x^(0), ..., x^(4)
-vie.savetex("vie-10-gd-J", strjoin(compose("%.3f", Jgd1(1:5)), ",\ "));     % J(x^(0)), ..., J(x^(4))
-vie.savetex("vie-10-gd-Jmin", sprintf("%.3f", Jmin));
-vie.savetex("vie-10-gd-eta", sprintf("%g", etaLs));
-vie.savetex("vie-10-gd-hs2", sprintf("%g", hs2));
+Jmin = Jls(xls);
 %[text] 反復の様子を評価関数のグラフ上に描く（前回スライドの手描きの図を踏襲）。
 fig = newfig(4.0, 2.6);
 xx = linspace(-0.15, 1.25, 200);
@@ -265,18 +245,12 @@ xlabel("$s$", "Interpreter","latex"), ylabel("$p(s)$", "Interpreter","latex"), s
 savepng(fig, fullfile(resfolder,"vie-10-laplace.png"), 300)
 %%
 %[text] ## ソフト閾値処理
-%[text] $ \\phi\_\\mathrm{ST}(x;\\tau)=\\mathrm{sign}(x)\\max(|x|-\\tau,0) $ 。数値例（ $ \\tau=1 $ ）：
+%[text] $ \\phi\_\\mathrm{ST}(x;\\tau)=\\mathrm{sign}(x)\\max(|x|-\\tau,0) $ （ $ \\tau=1 $ ）。恒等写像 $ y=x $ （点線）も描く。 $ |x|\\leq\\tau $ は 0 に，それ以外は $ \\tau $ だけ原点に近づく。
 st = @(x,tau) sign(x).*max(abs(x) - tau, 0);
-xs = [-3 -0.5 0.2 2];
-ys = st(xs, 1)
-vie.savetex("vie-10-st-x", strjoin(compose("%g",xs),",\ "));
-vie.savetex("vie-10-st-y", strjoin(compose("%g",ys+0),",\ "));
-%[text] グラフには数値例の 4 点（橙）と恒等写像 $ y=x $ （点線）も描く。 $ |x|\\leq\\tau $ は 0 に，それ以外は $ \\tau $ だけ原点に近づく。
 xx = linspace(-3, 3, 601);
 fig = newfig(4.0, 3.1);
 plot(xx, xx, ":", "Color", cGray, "LineWidth", 1), hold on
-plot(xx, st(xx,1), "Color", cMain, "LineWidth", 1.8)
-plot(xs, ys, "o", "MarkerSize", 4, "MarkerFaceColor", cWarm, "MarkerEdgeColor", cWarm), hold off
+plot(xx, st(xx,1), "Color", cMain, "LineWidth", 1.8), hold off
 grid on, axis equal, xlim([-3 3]), ylim([-2.2 2.2]), xticks([-3 -1 0 1 3]), yticks([-2 -1 0 1 2])
 xlabel("$x$", "Interpreter","latex"), ylabel("$\phi_\mathrm{ST}(x;\tau)$", "Interpreter","latex")
 set(gca, "FontSize", 8, "TickLabelInterpreter","latex")
