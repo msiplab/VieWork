@@ -129,7 +129,7 @@ exportgraphics(gcf, fullfile(resfolder,"vie-02-acuity-geom.png"), "Resolution",2
 %%
 %[text] ## 階調と量子化
 %[text] 量子化は振幅の離散化である。教科書 2.1.6 項の**線形量子化**は，量子化ステップ $ Q $ を用いて
-%[text]{"align":"center"} $ y=\\phi(x)=\\lfloor x/Q \\rceil,\\quad \\check{x}=Qy $
+%[text]{"align":"center"} $ y=\\phi(x)=\\left\\lfloor \\frac{x}{Q} \\right\\rceil,\\quad \\check{x}=\\breve{\\phi}(y)=Qy $
 %[text] と表される（ $ \\lfloor\\cdot\\rceil $ は四捨五入， $ \\check{x} $ は逆量子化の結果）。画素値 $ x\\in[0,1] $ を $ L=2^\\beta $ 階調で表すときは $ Q=(2^\\beta-1)^{-1} $ とする。 $ \\beta $ を小さくすると，緩やかな濃淡に**擬似輪郭**が現れる。
 %[text] 画像は msipimg05（石像の顔）のグレースケールを 256×256 に縮小して使う。空のなめらかな階調に擬似輪郭が現れ，石の細部との違いが分かりやすい。
 Xg = im2double(vie.msipimg(5, 256, "gray"));
@@ -172,8 +172,8 @@ ylabel("$\check{x}=Q\lfloor x/Q\rceil$", "Interpreter","latex", "FontSize",22)
 exportgraphics(gcf, fullfile(resfolder,"vie-02-quant-curve.png"), "Resolution",200)
 %%
 %[text] ## 色の表し方：RGB 表色系
-%[text] 色 $ C $ を 3 原色の単位ベクトル $ \\mathbf{e}\_\\mathrm{r},\\mathbf{e}\_\\mathrm{g},\\mathbf{e}\_\\mathrm{b} $ のベクトル和で表す。
-%[text]{"align":"center"} $ C = R\\,\\mathbf{e}\_\\mathrm{r} + G\\,\\mathbf{e}\_\\mathrm{g} + B\\,\\mathbf{e}\_\\mathrm{b} $
+%[text] 画素 $ \\boldsymbol{n} $ の色 $ \\vec{x}\[\\boldsymbol{n}\] $ を 3 原色の単位ベクトル $ \\vec{e}\_\\mathrm{R},\\vec{e}\_\\mathrm{G},\\vec{e}\_\\mathrm{B} $ のベクトル和で表す（記号は教科書 2.2.1 項の $ \\vec{x}\[\\boldsymbol{n}\]=(x\_\\mathrm{R}\[\\boldsymbol{n}\]\\ x\_\\mathrm{G}\[\\boldsymbol{n}\]\\ x\_\\mathrm{B}\[\\boldsymbol{n}\])^\\top $ に合わせる。この回ではビット数 $ B $ とビットレート $ R $ も使うので，成分を $ R,G,B $ とは書かない）。
+%[text]{"align":"center"} $ \\vec{x}\[\\boldsymbol{n}\] = x\_\\mathrm{R}\[\\boldsymbol{n}\]\\,\\vec{e}\_\\mathrm{R} + x\_\\mathrm{G}\[\\boldsymbol{n}\]\\,\\vec{e}\_\\mathrm{G} + x\_\\mathrm{B}\[\\boldsymbol{n}\]\\,\\vec{e}\_\\mathrm{B} $
 %[text] 画像は msipimg02（花束）を 384×384 に縮小し，下側の 256×384 画素（赤・橙・黄・白の花が並ぶ部分）を切り出して使う。花の色ごとに R, G, B の成分の強さが異なる。
 Y = im2double(vie.msipimg(2, 384));
 Y = Y(129:384, :, :);
@@ -188,10 +188,10 @@ imwrite(Y,  fullfile(resfolder,"vie-02-rgb-full.png"))
 imwrite(Yr, fullfile(resfolder,"vie-02-rgb-r.png"))
 imwrite(Yg, fullfile(resfolder,"vie-02-rgb-g.png"))
 imwrite(Yb, fullfile(resfolder,"vie-02-rgb-b.png"))
-%[text] ひとつの画素を取り出すと，3 つの数の組になっている。
+%[text] ひとつの画素を取り出すと，3 つの数の組 $ (x\_\\mathrm{R}\\ x\_\\mathrm{G}\\ x\_\\mathrm{B}) $ になっている。スライドでは pmatrix の中身（ `&` 区切り）として使う。
 pr = 202; pc = 110;                % 左下の赤い花（ダリア）のあたり
 rgb = squeeze(Y(pr,pc,:))'
-vie.savetex("vie-02-rgb-pix", sprintf("R=%.2f,\\ G=%.2f,\\ B=%.2f", rgb));
+vie.savetex("vie-02-rgb-pix", sprintf("%.2f & %.2f & %.2f", rgb));
 %%
 %[text] ## フレームレート
 %[text] フレームレート $ \\Delta\_\\mathrm{t}^{-1} $（fps）は 1 秒あたりのフレーム数。フレーム間隔 $ \\Delta\_\\mathrm{t} $ はその逆数である。
