@@ -8,9 +8,9 @@
 %%
 %[text] ## 準備
 %[text] 図の配色はスライドのロゴの 3 色（メインの緑，寒色系の青，暖色系の橙）と灰色にそろえる。
-[datfolder,resfolder] = vie.prjfolders();
-vie.download_img(false)
-X8 = double(imread("cameraman.tif"));          % 8 bit（0〜255）
+[~,resfolder] = vie.prjfolders();
+%[text] 写真は教科書のサンプル画像 msipimg05（石像の顔，アンコール）をグレースケールにし， $ 256\\times256 $ 画素に縮小して使う。空のなめらかな階調に PCM の擬似輪郭や DCT のブロックひずみがはっきり現れ，石像の細かな模様は動き補償のブロックマッチングの手がかりになる。
+X8 = double(vie.msipimg(5, 256, "gray"));      % 8 bit（0〜255），256×256
 [N1,N2] = size(X8);
 cMain = [0 136 85]/255;                        % メイン（緑）
 cCool = [46 117 182]/255;                      % 寒色系（青）
@@ -94,7 +94,7 @@ for i = 1:2
 end
 simPSNR
 %%
-%[text] ## 線形 PCM 符号化の処理例（cameraman）
+%[text] ## 線形 PCM 符号化の処理例（msipimg05）
 %[text] 8 bit の画素値を量子化ステップ $ Q $ で $ \\check{y}[\\boldsymbol{n}]=\\lfloor x[\\boldsymbol{n}]/Q \\rfloor $ と量子化し， $ \\check{x}[\\boldsymbol{n}]=Q\\,\\check{y}[\\boldsymbol{n}]+Q/2 $ で戻す（区間の中央）。 $ Q=8 $ （5 bpp）と $ Q=16 $ （4 bpp）で比べる。
 Qs = [8 16];
 psnrPCM = zeros(size(Qs));
@@ -168,7 +168,7 @@ exportgraphics(fig, fullfile(resfolder,"vie-12-hist.png"), "Resolution", 300)
 close(fig)
 %%
 %[text] ## 動き補償予測の効果（ブロックマッチングによる動き推定）
-%[text] cameraman に撮像ノイズ（ $ \\sigma=3 $ ）を加えた前フレームを復号済み参照フレーム $ \\check{\\msiptensor{x}}\_{m\_\\mathrm{t}} $ とみなし，内容を下に 1 画素，右に 2 画素動かした現フレーム $ \\msiptensor{x}\_{n\_\\mathrm{t}} $ を作る（ $ 224\\times224 $ 画素を切り出す）。
+%[text] msipimg05 に撮像ノイズ（ $ \\sigma=3 $ ）を加えた前フレームを復号済み参照フレーム $ \\check{\\msiptensor{x}}\_{m\_\\mathrm{t}} $ とみなし，内容を下に 1 画素，右に 2 画素動かした現フレーム $ \\msiptensor{x}\_{n\_\\mathrm{t}} $ を作る（ $ 224\\times224 $ 画素を切り出す）。
 sigma = 3; shift = [1 2];                        % 内容の動き（下へ 1，右へ 2 画素）
 rng(0)
 Xref = X8 + sigma*randn(N1,N2);                  % 前フレーム（参照フレーム）
@@ -244,9 +244,9 @@ exportgraphics(fig, fullfile(resfolder,"vie-12-mc-sad.png"), "Resolution", 600)
 close(fig)
 %%
 %[text] ## 色差サブサンプリング（4:2:0）
-%[text] kodim23 の Y, Cb, Cr を 4:2:0 の大きさで並べる。
-Xc = im2double(imread(fullfile(datfolder,"kodim23.png")));
-Xc = min(max(imresize(Xc, 0.5), 0), 1);
+%[text] msipimg02（花束）の Y, Cb, Cr を 4:2:0 の大きさで並べる。色とりどりの花で色差 Cb, Cr の模様がはっきりしている。上下を切り出した $ 384\\times512 $ 画素を $ 192\\times256 $ 画素に縮小する。
+Xc = im2double(vie.msipimg(2));
+Xc = min(max(imresize(Xc(65:448,:,:), 0.5), 0), 1);
 Ycc = rgb2ycbcr(Xc);
 imwrite(Ycc(:,:,1), fullfile(resfolder,"vie-12-y.png"))
 imwrite(imresize(Ycc(:,:,2), 0.5), fullfile(resfolder,"vie-12-cb.png"))
