@@ -243,6 +243,28 @@ vie.savetex("vie-11-poc-shift", intvec2tex(lag));
 vie.savetex("vie-11-poc-n0", intvec2tex(n0));
 vie.savetex("vie-11-poc-peak", sprintf("%.2f", peak));
 %%
+%[text] ## 見かけ上の動き：光源変化の影響（前回スライドの図を踏襲）
+%[text] 動かない球を，フレーム $ n\_\\mathrm{t}-1 $ では左上から，フレーム $ n\_\\mathrm{t} $ では右上から照らす。拡散反射（ランバート反射）の明るさ $ a+k\\max(0,\\boldsymbol{\\eta}^\\top\\boldsymbol{\\ell}) $ （ $ \\boldsymbol{\\eta} $ ：面の法線， $ \\boldsymbol{\\ell} $ ：光源の向き）で陰影をつけ，床には光と反対側に影を落とす。物体は動いていないのに，明るい面と影が入れ替わり，動いたように見える。
+Ms = 200;
+[xs, ys] = meshgrid(linspace(-1.3, 1.3, Ms), linspace(1.3, -1.3, Ms));   % 横：右が正，縦：上が正（縦横同じ縮尺）
+r0 = 0.75; yc = 0.1;                            % 球の半径と中心の高さ
+dx = xs/r0; dy = (ys - yc)/r0; in = dx.^2 + dy.^2 <= 1;
+nz = sqrt(max(0, 1 - dx.^2 - dy.^2));          % 球面の法線の奥行き成分
+lights = {[-1 1 0.9], [1 1 0.9]};              % 左上から，右上から
+names = ["vie-11-light-a.png", "vie-11-light-b.png"];
+for i = 1:2
+    l = lights{i}/norm(lights{i});
+    I = 0.93*ones(Ms);                          % 背景（明るい灰）
+    ysh = -0.78; floorY = ys < -0.6;            % 床
+    I(floorY) = 0.82;
+    % 床の影：光と反対側にずれた楕円
+    shx = -0.5*sign(l(1)); sh = ((xs - shx)/0.85).^2 + ((ys - ysh)/0.14).^2 <= 1;
+    I(sh & floorY) = 0.55;
+    shade = 0.15 + 0.8*max(0, dx*l(1) + dy*l(2) + nz*l(3));
+    I(in) = shade(in);
+    imwrite(I, fullfile(resfolder, names(i)))
+end
+%%
 %[text] ## まとめ
 %[text] - 動いている映像のスペクトルは速度に応じて傾いた平面に集中する（大域的定速移動モデル）
 %[text] - 動き推定には，ブロックマッチング法（SAD や SSD の最小化）や位相限定相関が使われる
