@@ -27,13 +27,10 @@ y = floor(x/Q)
 vie.savetex("vie-03-q-Q", sprintf("%d",Q));
 vie.savetex("vie-03-q-x", strjoin(string(x),",\ "));
 vie.savetex("vie-03-q-y", strjoin(string(y),",\ "));
-%[text] 入出力の関係（量子化特性）は階段状になる。上の数値例の 4 点を橙の点で重ねる。スライドでは幅 4 cm 程度で表示するので，図の大きさを 8 cm 幅にして文字が読めるようにする。
+%[text] 入出力の関係（量子化特性）は階段状になる。数値例はスライドの例の枠に書くので，図には重ねない。スライドでは幅 4 cm 程度で表示するので，図の大きさを 8 cm 幅にして文字が読めるようにする。
 xx = 0:255;
 fig = newfig(8, 6);
 stairs(xx, floor(xx/Q), "Color", cMain, "LineWidth", 1.5)
-hold on
-plot(x, y, "o", "Color", cWarm, "MarkerFaceColor", cWarm, "MarkerSize", 5)
-hold off
 grid on, xlim([0 256]), ylim([-0.2 L-0.8])
 xticks(0:Q:256), yticks(0:L-1)
 xlabel("$x$", "Interpreter", "latex")
