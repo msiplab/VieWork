@@ -7,15 +7,13 @@
 %%
 %[text] ## 準備
 %[text] 図の配色はロゴの 3 色（メインの緑，寒色系の青，暖色系の橙）と灰色にそろえる。
-[datfolder,resfolder] = vie.prjfolders();
-vie.download_img(false)
+[~,resfolder] = vie.prjfolders();
 cMain = [0 136 85]/255;                        % メイン（緑）
 cCool = [46 117 182]/255;                      % 寒色系（青）
 cWarm = [197 90 17]/255;                       % 暖色系（橙）
 cGray = [0.45 0.45 0.45];                      % 灰色
-%[text] 柵の細かい縞をもつ kodim19（灯台）をグレースケールにして使う。
-X = im2double(rgb2gray(imread(fullfile(datfolder,"kodim19.png"))));
-X = X(301:556, 1:256);                       % 柵を含む 256×256 の領域
+%[text] 参考資料のサンプル画像 msipimg06（縞模様の路面）をグレースケールにし， $ 256\\times256 $ に縮小して使う。段の縁の細い溝（1 画素ほどの幅の斜めの線）と石の細かい模様が，間引きでエリアシングを起こしやすい（溝が途切れた破線に化ける）。msipimg07（モンブラン），msipimg08（スイカ）の切り出しとも比べ，エリアシングが最もはっきり見えるこの画像を選んだ。
+X = im2double(vie.msipimg(6, 256, "gray"));  % 256×256 のグレースケール
 size(X)
 imwrite(X, fullfile(resfolder,"vie-08-org.png"))
 %%
@@ -74,9 +72,10 @@ figure
 tiledlayout(1,2,"TileSpacing","compact","Padding","compact")
 nexttile, imshow(Znn), title("最近傍補間")
 nexttile, imshow(Zbl), title("双線形補間")
-%[text] 拡大部分（右下）を比べる。
-imwrite(imresize(Znn(129:192,129:192), 3, "nearest"), fullfile(resfolder,"vie-08-nn-zoom.png"))
-imwrite(imresize(Zbl(129:192,129:192), 3, "nearest"), fullfile(resfolder,"vie-08-bl-zoom.png"))
+%[text] 拡大部分（青い帯の斜めの端を含む $ 64\\times64 $ の領域）を比べる。最近傍補間では斜めの縁が階段状になり，双線形補間ではなめらかになる。
+zr = 120:183; zc = 50:113;                   % 斜めの縁を含む領域
+imwrite(imresize(Znn(zr,zc), 3, "nearest"), fullfile(resfolder,"vie-08-nn-zoom.png"))
+imwrite(imresize(Zbl(zr,zc), 3, "nearest"), fullfile(resfolder,"vie-08-bl-zoom.png"))
 %%
 %[text] ## 一次元の標本化とスペクトル
 %[text] 波形 $ u(t) $ を標本化間隔 $ \\Delta\_\\mathrm{t} $ で標本化する（ $ D=1 $ ， $ \\boldsymbol{L}=\\Delta\_\\mathrm{t} $ ）。サンプル列 $ x(t)=u(t)\\,\\mathrm{comb}\_{\\Delta\_\\mathrm{t}}(t) $ のフーリエ変換は
