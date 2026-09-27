@@ -7,8 +7,7 @@
 %%
 %[text] ## 準備
 %[text] 図の配色はスライドのロゴの 3 色（メインの緑，寒色系の青，暖色系の橙）と灰色を使う。
-[datfolder,resfolder] = vie.prjfolders();
-vie.download_img(false)
+[~,resfolder] = vie.prjfolders();
 cMain = [0 136 85]/255;                             % 緑 #008855（メイン）
 cCool = [46 117 182]/255;                           % 青 #2E75B6（寒色系）
 cWarm = [197 90 17]/255;                            % 橙 #C55A11（暖色系）
@@ -140,9 +139,8 @@ for k = 1:5
 end
 %%
 %[text] ## 画像の境界処理の例
-%[text] kodim04 の一部に $ 17\\times17 $ のガウシアン（ $ \\sigma\_\\mathrm{g}=4 $ ）を施す。拡張点数は 16 点（両側 8 点）。零値拡張では縁が黒く滲み，対称拡張では滲まない。
-Xc = im2double(imread(fullfile(datfolder,"kodim04.png")));
-Xc = imresize(Xc(1:512, :, :), 0.5);                % 上半分を縮小（256×256）
+%[text] 教科書のサンプル画像 msipimg06（縞模様の路面，256×256 に縮小）に $ 17\\times17 $ のガウシアン（ $ \\sigma\_\\mathrm{g}=4 $ ）を施す。拡張点数は 16 点（両側 8 点）。路面が明るく，画像の四辺とも明るい画素が接しているので，零値拡張で縁が黒く滲む様子がどの辺でもはっきり見える。対称拡張では滲まない。
+Xc = im2double(vie.msipimg(6, 256));                % 縞模様の路面（256×256）
 Xc = min(max(Xc,0),1);
 fgau = fspecial("gaussian", 17, 4);
 Ez = padarray(Xc, [8 8], 0);                        % 零値拡張画像
@@ -317,8 +315,8 @@ vie.savetex("vie-06-ext-h",   sprintf("%g",ext(2)));
 vie.savetex("vie-06-ext-v",   sprintf("%g",ext(3)));
 %%
 %[text] ## 画像フィルタ
-%[text] 各画素の近傍 $ 3\\times3 $ 配列とフィルタカーネルの内積を全画素で計算する。cameraman.tif に矩形フィルタ，4 近傍ラプラシアン，ソーベル（水平・垂直）を施す（境界は対称拡張。負の値を含む出力は 0.5 を中心に表示）。
-Cm = im2double(imread("cameraman.tif"));
+%[text] 各画素の近傍 $ 3\\times3 $ 配列とフィルタカーネルの内積を全画素で計算する。教科書のサンプル画像 msipimg04（石造りの建物，グレースケール，256×256 に縮小）に矩形フィルタ，4 近傍ラプラシアン，ソーベル（水平・垂直）を施す（境界は対称拡張。負の値を含む出力は 0.5 を中心に表示）。建物は柱（縦）と階段・軒（横）の輪郭が多いので，水平ソーベルが縦の輪郭を，垂直ソーベルが横の輪郭を取り出す違いがはっきり見える。
+Cm = im2double(vie.msipimg(4, 256, "gray"));        % 石造りの建物（256×256）
 masks = {ones(3)/9, [0 1 0; 1 -4 1; 0 1 0], [-1 0 1; -2 0 2; -1 0 1], [-1 -2 -1; 0 0 0; 1 2 1]};
 mtag = ["avg","lap","sobh","sobv"];
 figure
