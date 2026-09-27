@@ -18,6 +18,47 @@ ccool = [46 117 182]/255;   % 寒色系（青）#2E75B6：第 2 系統（信号�
 cwarm = [197 90 17]/255;    % 暖色系（橙）#C55A11：注目させたい箇所
 cgray = [0.6 0.6 0.6];      % 補助線（灰）
 %%
+%[text] ## 標本化によるスペクトルの周期化（前回スライドの図を踏襲）
+%[text] 斜めに傾いた細長いスペクトル $ \\tilde{u}(\\boldsymbol{\\nu}) $ （円形とは限らない）を，標本化行列 $ \\boldsymbol{L}=\\mathrm{diag}(\\Delta\_\\mathrm{v},\\Delta\_\\mathrm{h}) $ の直交標本化で周期化する（教科書 4.1.3 項「FT と DSFT の関係」）。
+%[text] $ \\tilde{x}(\\boldsymbol{\\nu})=\\frac{1}{|\\det(\\boldsymbol{L})|}\\sum\_{\\boldsymbol{m}\\in\\mathbb{Z}^2}\\tilde{u}(\\boldsymbol{\\nu}-2\\pi\\boldsymbol{L}^{-\\top}\\boldsymbol{m}) $ 。図では $ \\Delta\_\\mathrm{v}=\\Delta\_\\mathrm{h}=1 $ とし，周期 $ 2\\pi $ ごとに複製が並ぶ。
+nuRange = 3*pi; M = 481;
+nu = linspace(-nuRange, nuRange, M);
+[NUh, NUv] = meshgrid(nu, nu);                  % 横：nu_h，縦：nu_v
+th = deg2rad(12);                               % 傾き（垂直軸から）
+sgh = 0.42; sgv = 1.05;                         % 細長いガウス形（水平に狭く，垂直に広い）
+uspec = @(h,v) exp(-((h*cos(th) - v*sin(th)).^2/(2*sgh^2) + (h*sin(th) + v*cos(th)).^2/(2*sgv^2)));
+U = uspec(NUh, NUv);
+Xs = zeros(size(U));
+for mv = -2:2
+    for mh = -2:2
+        Xs = Xs + uspec(NUh - 2*pi*mh, NUv - 2*pi*mv);   % 2*pi*L^{-T}*m（L = I）
+    end
+end
+cmapS = interp1([0 1], [1 1 1; ccool], linspace(0, 1, 256));   % 白→青
+ttl = ["$\tilde{u}(\mbox{\boldmath$\nu$})$", "$\tilde{x}(\mbox{\boldmath$\nu$})$"];
+fn = ["vie-11-sampspec-a.png", "vie-11-sampspec-b.png"];
+Z = {U, Xs};
+for i = 1:2
+    fig = figure(Units="centimeters", Position=[2 2 5.2 5.2]);
+    ax = axes(fig);
+    imagesc(ax, nu, nu, Z{i}), axis(ax, "xy", "image"), colormap(ax, cmapS), clim(ax, [0 1])
+    hold(ax, "on")
+    xline(ax, 0, "Color", cgray, "LineWidth", 0.5), yline(ax, 0, "Color", cgray, "LineWidth", 0.5)   % 原点を通る補助線
+    if i == 2
+        plot(ax, pi*[-1 1 1 -1 -1], pi*[-1 -1 1 1 -1], "--", "Color", [0 0 0], "LineWidth", 0.8)   % 基本周期の範囲
+    end
+    hold(ax, "off")
+    set(ax, "Box","on", "Layer","top", ...
+        "XTick", [-2*pi 0 2*pi], "YTick", [-2*pi 0 2*pi], "TickLabelInterpreter","latex", "FontSize", 13, ...
+        "XTickLabel", ["$-\frac{2\pi}{\Delta_\mathrm{h}}$", "$0$", "$\frac{2\pi}{\Delta_\mathrm{h}}$"], ...
+        "YTickLabel", ["$-\frac{2\pi}{\Delta_\mathrm{v}}$", "$0$", "$\frac{2\pi}{\Delta_\mathrm{v}}$"])
+    xlabel(ax, "$\nu_\mathrm{h}$", "Interpreter","latex", "FontSize", 15)
+    ylabel(ax, "$\nu_\mathrm{v}$", "Interpreter","latex", "FontSize", 15, "Rotation", 0)
+    title(ax, ttl(i), "Interpreter","latex", "FontSize", 15)
+    exportgraphics(fig, fullfile(resfolder, fn(i)), "Resolution", 300)
+    close(fig)
+end
+%%
 %[text] ## エッジ画像のスペクトル
 %[text] 斜めの直線（エッジ）をもつ画像の振幅スペクトルは，直線と直交する方向に伸びる。画像ごとにさまざまな形のスペクトルをもつ。
 N = 128;
