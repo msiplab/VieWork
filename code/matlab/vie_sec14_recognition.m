@@ -5,8 +5,8 @@
 %[text:tableOfContents]{"heading":"目次"}
 %%
 %[text] ## 準備
-[datfolder,resfolder] = vie.prjfolders();
-vie.download_img(false)
+[~,resfolder] = vie.prjfolders();
+%[text] 写真は教科書のサンプル画像 msipimg##.tif（512×512 のカラー）を `vie.msipimg` で読み込む。色の特徴空間には色とりどりの花束（msipimg02），コーナー・輪郭線の検出と特徴マップには縦横の縁がはっきりした石造りの建物（msipimg04），ハフ変換には斜めの直線（縞）が並ぶ路面（msipimg06），輪郭線の小さな例には丸い輪郭が並ぶマカロン（msipimg03）を使う。
 %[text] 図の配色はロゴの 3 色（メインの緑 #008855，青 #2E75B6，橙 #C55A11）と灰色を基本にする。薄い色は白と混ぜて作る。
 cMain = [0 136 85]/255;                          % 緑（メイン）
 cCool = [46 117 182]/255;                        % 青（寒色系）
@@ -86,8 +86,8 @@ vie.savetex("vie-14-acc", sprintf("%.0f", 100*acc));
 vie.savetex("vie-14-nte", sprintf("%d", numel(yte)));
 %%
 %[text] ## 色の特徴空間
-%[text] 画像の各画素の (R, G, B) を特徴ベクトルとみなすと，RGB 空間が特徴空間になる（色そのものが内容なので，点は画素の色で塗る）。
-Xc = im2double(imread(fullfile(datfolder,"kodim23.png")));
+%[text] 画像の各画素の (R, G, B) を特徴ベクトルとみなすと，RGB 空間が特徴空間になる（色そのものが内容なので，点は画素の色で塗る）。色の分布が広がって見えるよう，橙・黄・赤・白・緑の花が並ぶ花束（msipimg02）を使う。
+Xc = im2double(vie.msipimg(2));
 Xs = imresize(Xc, 1/8);
 v = reshape(Xs, [], 3);
 clf
@@ -115,11 +115,11 @@ vie.savetex("vie-14-harris-det", strjoin(compose("%.3f", R(:,1)'), " & "));
 vie.savetex("vie-14-harris-tr", strjoin(compose("%.2f", R(:,2)'), " & "));
 %%
 %[text] ## ハリスのコーナー検出：処理結果
-%[text] 市松模様と鉄骨構造の画像（gantrycrane.png）でコーナーを検出する。コーナー点は橙の＋印で示す。
+%[text] 市松模様と石造りの建物の画像（msipimg04 をグレースケールにして 256×256 に縮小）でコーナーを検出する。建物はアーチの頂や柱の角など，縦横の縁が交わる点がはっきりしている。コーナー点は橙の＋印で示す。
 C = checkerboard(24, 3, 3) > 0.5;
 C = double(C);
 cc = corner(C, "Harris", 40);
-Gr = im2double(rgb2gray(imread("gantrycrane.png")));
+Gr = im2double(vie.msipimg(4, 256, "gray"));
 cg = corner(Gr, "Harris", 150, "SensitivityFactor", 0.04);
 clf, imshow(C), hold on, plot(cc(:,1), cc(:,2), "+", "Color", cWarm, "MarkerSize", 10, "LineWidth", 2.5), hold off
 exportgraphics(gca, fullfile(resfolder,"vie-14-harris-checker.png"), "Resolution", 150, "Width", 6, "Height", 6, "Units", "centimeters")
@@ -137,8 +137,7 @@ Ec = edge(Gr, "canny");
 Es = edge(Gr, "sobel");
 imwrite(~Ec, fullfile(resfolder,"vie-14-canny.png"))
 imwrite(~Es, fullfile(resfolder,"vie-14-sobel.png"))
-Xk = im2double(rgb2gray(imread(fullfile(datfolder,"kodim23.png"))));
-Xk = imresize(Xk, 0.5);
+Xk = im2double(vie.msipimg(3, 256, "gray"));     % マカロン（丸い輪郭が並ぶ）
 imwrite(Xk, fullfile(resfolder,"vie-14-parrot-gray.png"))
 imwrite(~edge(Xk, "canny"), fullfile(resfolder,"vie-14-parrot-canny.png"))
 %%
@@ -182,10 +181,15 @@ exportgraphics(gca, fullfile(resfolder,"vie-14-hough-curves.png"), "Resolution",
 vie.savetex("vie-14-hough-rho", sprintf("%.3f", rho(1)));
 %%
 %[text] ## ハフ変換：処理例
+%[text] 斜めの直線（縞の縁）がはっきりした路面の画像（msipimg06 をグレースケールにして 256×256 に縮小）を使う。路面の細かな模様の輪郭を拾わないよう，キャニーのガウス平滑化の標準偏差を 3 と大きめにとる。
 %[text] キャニーの輪郭画像を投票し，投票度数の大きなセル（ピーク）を探索して直線を描く（逆ハフ変換）。投票度数は見やすいよう平方根をとって白→緑→濃緑の色で表示する。選ばれたセルは橙の□印。
-[Hh, T, Rr] = hough(Ec);
+Gh = im2double(vie.msipimg(6, 256, "gray"));
+Eh = edge(Gh, "canny", [], 3);
+imwrite(Gh, fullfile(resfolder,"vie-14-hough-in.png"))
+imwrite(~Eh, fullfile(resfolder,"vie-14-hough-canny.png"))
+[Hh, T, Rr] = hough(Eh);
 pk = houghpeaks(Hh, 12, "Threshold", 0.3*max(Hh(:)));
-hl = houghlines(Ec, T, Rr, pk, "FillGap", 20, "MinLength", 60);
+hl = houghlines(Eh, T, Rr, pk, "FillGap", 20, "MinLength", 60);
 cmapV = interp1([0 0.5 1], [1 1 1; cMain; 0 0.2 0.12], linspace(0, 1, 256));   % 白→緑→濃緑
 clf
 imshow(sqrt(rescale(Hh)), "XData", T, "YData", Rr, "InitialMagnification", "fit"), axis on, axis normal   % 投票度数（平方根）
@@ -193,13 +197,13 @@ colormap(gca, cmapV), xlabel("\theta [度]"), ylabel("\rho"), hold on
 plot(T(pk(:,2)), Rr(pk(:,1)), "s", "Color", cWarm, "MarkerSize", 7, "LineWidth", 2), hold off
 xticks(-90:45:90), set(gca, "FontSize", 12)
 exportgraphics(gca, fullfile(resfolder,"vie-14-hough-acc.png"), "Resolution", 150, "Width", 10, "Height", 7, "Units", "centimeters")
-clf, imshow(Gr), hold on
+clf, imshow(Gh), hold on
 for kk = 1:numel(hl)
     xy = [hl(kk).point1; hl(kk).point2];
     plot(xy(:,1), xy(:,2), "LineWidth", 3, "Color", cMain)
 end
 hold off
-exportgraphics(gca, fullfile(resfolder,"vie-14-hough-lines.png"), "Resolution", 150, "Width", 12, "Height", 12*size(Gr,1)/size(Gr,2), "Units", "centimeters")
+exportgraphics(gca, fullfile(resfolder,"vie-14-hough-lines.png"), "Resolution", 150, "Width", 12, "Height", 12, "Units", "centimeters")
 nlines = numel(hl)
 colormap(gca, gray)
 %%
@@ -268,8 +272,8 @@ vie.savetex("vie-14-xor-e", sci2tex(Lfinal));
 vie.savetex("vie-14-xor-eta", sprintf("%g", eta));
 %%
 %[text] ## 畳み込み層とプーリング層
-%[text] 4 種類のフィルタ（フィルタバンク）で畳み込み，ReLU を施し， $ 2\\times2 $ の最大値プーリングで縮小した特徴マップを並べる。
-Xg = im2double(imread("cameraman.tif"));
+%[text] 4 種類のフィルタ（フィルタバンク）で畳み込み，ReLU を施し， $ 2\\times2 $ の最大値プーリングで縮小した特徴マップを並べる。入力は石造りの建物（msipimg04 をグレースケールにして 256×256 に縮小）で，柱の縦の縁と階段の横の縁がそれぞれ別の特徴マップに現れ，フィルタの方向選択性が分かる。
+Xg = im2double(vie.msipimg(4, 256, "gray"));
 imwrite(Xg, fullfile(resfolder,"vie-14-fmap-in.png"))
 % 水平差分（Sobel），垂直差分（Sobel），ラプラシアン，符号反転したラプラシアン
 Fk = {[-1 0 1; -2 0 2; -1 0 1], [-1 -2 -1; 0 0 0; 1 2 1], [0 1 0; 1 -4 1; 0 1 0], -[0 1 0; 1 -4 1; 0 1 0]};
