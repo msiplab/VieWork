@@ -17,7 +17,7 @@ A = [1 1; -1 1]/sqrt(2)
 B = inv(A)                                     % = A'（直交行列）
 %%
 %[text] ## 自然画像の隣接画素の散布図
-%[text] cameraman.tif の水平方向の隣接画素ペア $ \\mathbf{x}^{[i]}=(x\_1\\ x\_2)^\\top $ （重ならないように 2 画素ずつ）を散布図にする。軸の記号は教科書の図 6.1 に合わせる。ほぼ対角線上に並ぶ：隣どうしは似た値をとる（相関が強い）。
+%[text] cameraman.tif の水平方向の隣接画素ペア $ \\mathbf{x}^{[i]}=(x\_0\\ x\_1)^\\top $ （重ならないように 2 画素ずつ）を散布図にする。添え字は第09回全体で 0 始まりに揃える（教科書の図 6.1 は 1 始まり）。ほぼ対角線上に並ぶ：隣どうしは似た値をとる（相関が強い）。
 X = im2double(imread("cameraman.tif"));
 x1 = X(:,1:2:end); x2 = X(:,2:2:end);
 P = [x1(:) x2(:)]';                            % 2×S の画素ペア
@@ -28,7 +28,7 @@ Sx = cov(P', 1)
 clf
 scatter(P(1,:), P(2,:), 6, ccool, "filled", "MarkerFaceAlpha", 0.3, "MarkerEdgeColor", "none")
 axis square, axis([0 1 0 1]), grid on, box on
-xlabel("$x_1$", "Interpreter", "latex"), ylabel("$x_2$", "Interpreter", "latex")
+xlabel("$x_0$", "Interpreter", "latex"), ylabel("$x_1$", "Interpreter", "latex")
 set(gca, "FontSize", 18, "XTick", 0:0.2:1, "YTick", 0:0.2:1)
 exportgraphics(gca, fullfile(resfolder,"vie-09-scatter-x.png"), "Resolution", 110)
 imwrite(X, fullfile(resfolder,"vie-09-cam.png"))
@@ -36,7 +36,7 @@ imwrite(X, fullfile(resfolder,"vie-09-cam.png"))
 %[text] ## 信号変換の効果
 %[text] 教科書の例「分散共分散行列」と同じ変換行列（ $ \\mathbf{C}\_2=\\mathbf{H}\_2 $ ，2 点のユニタリ DFT 行列 $ \\mathbf{W}\_2/\\sqrt{2} $ と一致）
 %[text]{"align":"center"} $ \\mathbf{A}\_\\mathrm{ex}=\\frac{1}{\\sqrt{2}}\\begin{pmatrix}1&1\\\\1&-1\\end{pmatrix} $
-%[text] で $ \\mathbf{y}^{[i]}=\\mathbf{A}\_\\mathrm{ex}\\mathbf{x}^{[i]} $ と変換すると， $ y\_1 $ （和）の方向に大きく広がり， $ y\_2 $ （差）の方向の広がりは小さい。分散共分散行列は $ \\mathbf{A}\_\\mathrm{ex}\\hat{\\boldsymbol{\\Sigma}}\_\\mathcal{X}\\mathbf{A}\_\\mathrm{ex}^\\top $ となり，非対角成分（相関）がほぼ 0 になる。
+%[text] で $ \\mathbf{y}^{[i]}=\\mathbf{A}\_\\mathrm{ex}\\mathbf{x}^{[i]} $ と変換すると， $ y\_0 $ （和）の方向に大きく広がり， $ y\_1 $ （差）の方向の広がりは小さい。分散共分散行列は $ \\mathbf{A}\_\\mathrm{ex}\\hat{\\boldsymbol{\\Sigma}}\_\\mathcal{X}\\mathbf{A}\_\\mathrm{ex}^\\top $ となり，非対角成分（相関）がほぼ 0 になる。
 Aex = [1 1; 1 -1]/sqrt(2);
 Q = Aex*P;
 Sy = cov(Q', 1)
@@ -44,19 +44,19 @@ Sy_check = Aex*Sx*Aex'                          % 同じ値になる
 clf
 scatter(Q(1,:), Q(2,:), 6, ccool, "filled", "MarkerFaceAlpha", 0.3, "MarkerEdgeColor", "none")
 axis equal, axis([0 1.5 -0.75 0.75]), grid on, box on
-xlabel("$y_1$", "Interpreter", "latex"), ylabel("$y_2$", "Interpreter", "latex")
+xlabel("$y_0$", "Interpreter", "latex"), ylabel("$y_1$", "Interpreter", "latex")
 set(gca, "FontSize", 18, "XTick", 0:0.5:1.5, "YTick", -0.5:0.5:0.5)
 exportgraphics(gca, fullfile(resfolder,"vie-09-scatter-y.png"), "Resolution", 110)
 vie.savetex("vie-09-Sx", arr2texz(Sx, "%.4f", "0.0000"));
 vie.savetex("vie-09-Sy", arr2texz(Sy, "%.4f", "0.0000"));
-%[text] $ y\_2 $ （差分）の多くは 0 付近に集まる：変換係数の絶対値が 0.02 未満の割合
+%[text] $ y\_1 $ （差分）の多くは 0 付近に集まる：変換係数の絶対値が 0.02 未満の割合
 ratio = mean(abs(Q(2,:)) < 0.02)
 vie.savetex("vie-09-sparse-y", sprintf("%.0f", 100*ratio));
 %%
 %[text] ### 教科書の例「分散共分散行列」を再現する
 %[text] 教科書の図 6.1 は，図 1.2 (a) の画像（MsipWorkM の msipimg01.tif を $ 96\\times96 $ 画素に縮小したもの）の水平隣接画素ペアから作られている。同じ手順で計算し，教科書の $ \\hat{\\boldsymbol{\\Sigma}}\_\\mathcal{X} $ ， $ \\hat{\\boldsymbol{\\Sigma}}\_\\mathcal{Y} $ と一致することを確かめる。画像は VieWork の data フォルダ，隣に置いた MsipWorkM の data フォルダ，GitHub の順に探す（末尾のローカル関数 `msipimgfile` ）。
 I96 = imresize(im2double(rgb2gray(imread(msipimgfile("msipimg01.tif")))), [96 96], "bilinear");
-Xp = reshape(I96.', 2, []).';                  % S×2：各行が水平隣接画素ペア (x_1, x_2)
+Xp = reshape(I96.', 2, []).';                  % S×2：各行が水平隣接画素ペア (x_0, x_1)
 exSx = cov(Xp, 1)
 exSy = cov(Xp*Aex.', 1)
 txtSx = [0.0320 0.0277; 0.0277 0.0322];        % 教科書の値（図 6.1 の説明）
