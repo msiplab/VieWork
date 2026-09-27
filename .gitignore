@@ -122,4 +122,6 @@ Thumbs.db
 # （Kodak の kodim##.png は vie.download_img で取得する演習用なので管理しない）
 data/*
 !data/msipimg[0-9][0-9].tif
+# 例外：動き補償の例に使う前回スライドの映像の連続 2 フレーム（スライドの anim-11-motion-a と同じ）
+!data/anim-11-motion-a-f[0-9].jpg
 results/

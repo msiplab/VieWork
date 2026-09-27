@@ -168,16 +168,17 @@ exportgraphics(fig, fullfile(resfolder,"vie-12-hist.png"), "Resolution", 300)
 close(fig)
 %%
 %[text] ## 動き補償予測の効果（ブロックマッチングによる動き推定）
-%[text] msipimg05 に撮像ノイズ（ $ \\sigma=3 $ ）を加えた前フレームを復号済み参照フレーム $ \\check{\\msiptensor{x}}\_{m\_\\mathrm{t}} $ とみなし，内容を下に 1 画素，右に 2 画素動かした現フレーム $ \\msiptensor{x}\_{n\_\\mathrm{t}} $ を作る（ $ 224\\times224 $ 画素を切り出す）。
-sigma = 3; shift = [1 2];                        % 内容の動き（下へ 1，右へ 2 画素）
-rng(0)
-Xref = X8 + sigma*randn(N1,N2);                  % 前フレーム（参照フレーム）
-rr = 17:240; cc = 17:240;                        % 現フレームとして切り出す範囲
+%[text] 実際の動画の連続する 2 フレームを使う（前回スライドの映像。スライドの動画 anim-11-motion-a と同じもので，VieWork の data に置いた）。カメラが横に動いているので，内容は水平に動き，手前の木と奥の家では動きの大きさが違う。
+%[text] 前フレームを復号済み参照フレーム $ \\check{\\msiptensor{x}}\_{m\_\\mathrm{t}} $ とみなし，現フレーム $ \\msiptensor{x}\_{n\_\\mathrm{t}} $ から探索範囲の余白を除いた $ 304\\times464 $ 画素を処理する。
+datfolder = vie.prjfolders();
+Xref = double(rgb2gray(imread(fullfile(datfolder, "anim-11-motion-a-f0.jpg"))));   % 前フレーム（参照フレーム）
+Xcur = double(rgb2gray(imread(fullfile(datfolder, "anim-11-motion-a-f1.jpg"))));   % 現フレーム
+rr = 9:312; cc = 9:472;                          % 処理する範囲（16 の倍数，周囲に探索範囲の余白 8 画素）
 F0 = Xref(rr, cc);                               % 前フレームの同じ範囲
-F1 = X8(rr-shift(1), cc-shift(2)) + sigma*randn(numel(rr), numel(cc));   % 現フレーム
-%[text] $ 16\\times16 $ 画素のブロック $ b $ ごとに，探索範囲 $ \\mathcal{N}\_\\mathrm{w}=\\{-4,\\ldots,4\\}^2 $ の全探索で SAD
-%[text] $ \\mathrm{SAD}(\\boldsymbol{m};b)=\\sum\_{\\boldsymbol{n}\\in\\mathcal{N}\_b}|x[\\boldsymbol{n}]-\\check{x}[\\boldsymbol{n}+\\boldsymbol{m}]| $ を最小にする $ \\hat{\\boldsymbol{m}}\_b $ を求め，参照フレームの $ \\boldsymbol{n}+\\hat{\\boldsymbol{m}}\_b $ の画素で予測する（動き補償）。内容が下・右へ動いたので，参照する位置は上・左にずれ， $ \\hat{\\boldsymbol{m}}\_b=(-1\\ -2)^\\top $ となるはずである。
-Bs = 16; w = 4;
+F1 = Xcur(rr, cc);                               % 現フレーム
+%[text] $ 16\\times16 $ 画素のブロック $ b $ ごとに，探索範囲 $ \\mathcal{N}\_\\mathrm{w}=\\{-8,\\ldots,8\\}^2 $ の全探索で SAD
+%[text] $ \\mathrm{SAD}(\\boldsymbol{m};b)=\\sum\_{\\boldsymbol{n}\\in\\mathcal{N}\_b}|x[\\boldsymbol{n}]-\\check{x}[\\boldsymbol{n}+\\boldsymbol{m}]| $ を最小にする $ \\hat{\\boldsymbol{m}}\_b $ を求め，参照フレームの $ \\boldsymbol{n}+\\hat{\\boldsymbol{m}}\_b $ の画素で予測する（動き補償）。
+Bs = 16; w = 8;
 [Hf,Wf] = size(F1);
 P = zeros(Hf,Wf);                                % 動き補償予測
 mhat = zeros(Hf/Bs, Wf/Bs, 2);                   % ブロックごとの動きベクトル (m_v, m_h)
@@ -199,8 +200,8 @@ for bi = 1:Hf/Bs
         P(ib, jb) = Xref(rr(ib)+m(1), cc(jb)+m(2));
     end
 end
-okRatio = mean(mhat(:,:,1) == -shift(1) & mhat(:,:,2) == -shift(2), "all")   % 正しい動きの割合
-%[text] 単純なフレーム差分と，動き補償後の予測誤差の分散を比べる。予測誤差には二つのフレームのノイズだけが残る（分散 $ 2\\sigma^2=18 $ 程度）。
+mvHist = groupcounts(reshape(mhat(:,:,2),[],1))  % 水平成分の分布（手前と奥で違う）
+%[text] 単純なフレーム差分と，動き補償後の予測誤差の分散を比べる。
 dNoMC = F1 - F0;                                 % フレーム差分
 dMC = F1 - P;                                    % 動き補償後の予測誤差
 varMC = [var(dNoMC(:)) var(dMC(:))]
