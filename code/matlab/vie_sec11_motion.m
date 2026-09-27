@@ -87,12 +87,23 @@ for i = 1:numel(vs)
     lab = {["$t$", "$q_\mathrm{v}$"], ["$\nu_\mathrm{t}$", "$\nu_\mathrm{v}$"]};
     fn = [sprintf("vie-11-xt-v%02d.png", round(10*v)), sprintf("vie-11-spec-v%02d.png", round(10*v))];
     for j = 1:2
-        fig = figure(Units="centimeters", Position=[2 2 3.4 3.4]);
-        ax = axes(fig);
-        imagesc(ax, Z{j}), axis(ax, "xy", "image"), colormap(ax, gray(256))
-        set(ax, "XTick", [], "YTick", [])
-        xlabel(ax, lab{j}(1), "Interpreter","latex", "FontSize", 10)
-        ylabel(ax, lab{j}(2), "Interpreter","latex", "FontSize", 10, "Rotation", 0)
+        fig = figure(Units="centimeters", Position=[2 2 3.6 3.6], Color="w");
+        ax = axes(fig, Position=[0.03 0.05 0.66 0.66]);
+        imagesc(ax, Z{j}), axis(ax, "xy"), colormap(ax, gray(256))
+        set(ax, "XTick", [], "YTick", [], "Box", "off", "XColor","none", "YColor","none")
+        % 軸の向きを矢印で示す：時空間画像は左下の角から，スペクトルは原点（中央）を通る
+        p0 = ax.Position; ext = 0.08;
+        if j == 1
+            ox = p0(1); oy = p0(2); ca = [0 0 0];
+        else
+            ox = p0(1) + p0(3)/2; oy = p0(2) + p0(4)/2; ca = 0.6*[1 1 1];
+        end
+        annotation(fig, "arrow", [p0(1) p0(1)+p0(3)+ext], [oy oy], "Color", ca, "HeadWidth", 7, "HeadLength", 7)
+        annotation(fig, "arrow", [ox ox], [p0(2) p0(2)+p0(4)+ext], "Color", ca, "HeadWidth", 7, "HeadLength", 7)
+        annotation(fig, "textbox", [p0(1)+p0(3)+ext, oy-0.05, 0.13, 0.1], "String", lab{j}(1), ...
+            "Interpreter","latex", "FontSize", 16, "EdgeColor","none", "VerticalAlignment","middle", "Margin", 1)
+        annotation(fig, "textbox", [ox+0.01, p0(2)+p0(4)+ext-0.06, 0.13, 0.1], "String", lab{j}(2), ...
+            "Interpreter","latex", "FontSize", 16, "EdgeColor","none", "VerticalAlignment","middle")
         exportgraphics(fig, fullfile(resfolder, fn(j)), "Resolution", 300)
         close(fig)
     end
