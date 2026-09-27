@@ -351,7 +351,7 @@ Tsh
 Ttext = [0 0 0 0 1 0; 0 0 0 0 0 1; 1 0 0 0 0 0; 0 1 0 0 0 0; 0 0 1 0 0 0; 0 0 0 1 0 0];   % 教科書
 assert(isequal(Tsh, Ttext), "例「線形写像と行列表現」の行列が教科書と一致しない")
 vie.savetex("vie-06-sn-T", vie.arr2tex(Tsh,"%d"));
-%[text] 例「スペクトルノルム」：スペクトルノルム $ \\|\\mathsf{T}\\|\_\\mathrm{S}=\\sqrt{\\lambda\_0(\\mathbf{T}^\\mathsf{H}\\mathbf{T})} $ 。循環シフトはノルムを保存する（等長）ので 1。
+%[text] 例「スペクトルノルム」：スペクトルノルム $ \\|\\mathsf{T}\\|\_\\mathrm{S}=\\sqrt{\\lambda\_0(\\mathbf{T}^\\top\\mathbf{T})} $ 。循環シフトはノルムを保存する（等長）ので 1。
 snShift = sqrt(max(abs(eig(Tsh'*Tsh))))
 norm(Tsh)                                           % 2-ノルム（最大特異値）でも同じ
 vie.savetex("vie-06-sn-shift", sprintf("%g", snShift));
