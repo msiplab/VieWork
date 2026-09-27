@@ -6,8 +6,7 @@
 %%
 %[text] ## 準備
 %[text] 図の配色はロゴの 3 色（メインの緑，寒色系の青，暖色系の橙）と灰色を使う。
-[datfolder,resfolder] = vie.prjfolders();
-vie.download_img(false)
+[~,resfolder] = vie.prjfolders();
 tmpfolder = fullfile(resfolder, "tmp"); if ~isfolder(tmpfolder), mkdir(tmpfolder); end
 cMain = [0 136 85]/255;                         % メイン（緑 #008855）
 cCool = [46 117 182]/255;                       % 寒色系（青 #2E75B6）
@@ -16,41 +15,43 @@ cGray = 0.55*[1 1 1];                           % 灰色
 %%
 %[text] ## DCT の問題点：ブロックノイズとモスキートノイズ
 %[text] 低画質（品質 5）の JPEG で圧縮すると， $ 8\\times8 $ ブロックの境界が見える（ブロックノイズ），エッジのまわりにもやもやした揺らぎが出る（モスキートノイズ）。
-Xg = im2double(imread("cameraman.tif"));
-jpgfile = fullfile(tmpfolder, "cam_q5.jpg");
-imwrite(Xg, jpgfile, "Quality", 5);
+%[text] 画像は教科書のサンプル画像 msipimg01.tif（海岸）を $ 256\\times256 $ 画素のグレースケールに縮小して使う（共通関数 `vie.msipimg` ）。なめらかな空ではブロックの階段状の境界が，水平線と桟橋の輪郭の上下には縞状の揺らぎがはっきり見える（石像の顔 msipimg05，建物 msipimg04，路面 msipimg06 などと比べて選んだ）。
+X1 = im2double(vie.msipimg(1, 256, "gray"));   % 海岸（256×256）
+jpgfile = fullfile(tmpfolder, "beach_q5.jpg");
+imwrite(X1, jpgfile, "Quality", 5);
 Xj = im2double(imread(jpgfile));
-imwrite(imresize(Xj(1:64,1:64), 4, "nearest"), fullfile(resfolder,"vie-10-blocknoise.png"))       % 空の部分
-imwrite(imresize(Xj(40:103,100:163), 4, "nearest"), fullfile(resfolder,"vie-10-mosquito.png"))   % 人物の輪郭付近
-psnrJ = psnr(Xj, Xg)
+imwrite(imresize(Xj(1:64,129:192), 4, "nearest"), fullfile(resfolder,"vie-10-blocknoise.png"))   % 空の部分
+imwrite(imresize(Xj(33:96,65:128), 4, "nearest"), fullfile(resfolder,"vie-10-mosquito.png"))     % 水平線と桟橋の輪郭付近
+psnrJ = psnr(Xj, X1)
 %%
 %[text] ## JPEG と JPEG2000（同程度のファイルサイズ）
-%[text] kodim23 を約 12 kB になるよう JPEG と JPEG2000 で圧縮して比べる。
-Xc = imread(fullfile(datfolder,"kodim23.png"));
+%[text] msipimg03.tif（マカロン，カラー $ 512\\times512 $ 画素）を約 12 kB になるよう JPEG と JPEG2000 で圧縮して比べる。なめらかなマカロンの表面で JPEG のブロックノイズが目立つ（花束 msipimg02，石像の顔 msipimg05 と比べて選んだ）。
+Xc = vie.msipimg(3);                            % マカロン（カラー，512×512）
 target = 12e3;                                  % 目標ファイルサイズ [bytes]
 q = 1; sz = 0;
 while sz < target && q < 100                     % 品質を上げながら目標サイズを超える手前を探す
-    q = q + 1; imwrite(Xc, fullfile(tmpfolder,"k23.jpg"), "Quality", q);
-    d = dir(fullfile(tmpfolder,"k23.jpg")); sz = d.bytes;
+    q = q + 1; imwrite(Xc, fullfile(tmpfolder,"mac.jpg"), "Quality", q);
+    d = dir(fullfile(tmpfolder,"mac.jpg")); sz = d.bytes;
 end
-q = q - 1; imwrite(Xc, fullfile(tmpfolder,"k23.jpg"), "Quality", q);
-d = dir(fullfile(tmpfolder,"k23.jpg")); szJ = d.bytes;
+q = q - 1; imwrite(Xc, fullfile(tmpfolder,"mac.jpg"), "Quality", q);
+d = dir(fullfile(tmpfolder,"mac.jpg")); szJ = d.bytes;
 cr = numel(Xc)/szJ;                             % JPEG と同じ圧縮率
-imwrite(Xc, fullfile(tmpfolder,"k23.jp2"), "CompressionRatio", cr);
-d = dir(fullfile(tmpfolder,"k23.jp2")); szJ2 = d.bytes;
-Yj = imread(fullfile(tmpfolder,"k23.jpg")); Yj2 = imread(fullfile(tmpfolder,"k23.jp2"));
+imwrite(Xc, fullfile(tmpfolder,"mac.jp2"), "CompressionRatio", cr);
+d = dir(fullfile(tmpfolder,"mac.jp2")); szJ2 = d.bytes;
+Yj = imread(fullfile(tmpfolder,"mac.jpg")); Yj2 = imread(fullfile(tmpfolder,"mac.jp2"));
 sizes = [szJ szJ2]
 psnrs = [psnr(Yj, Xc) psnr(Yj2, Xc)]
-imwrite(Yj(181:436, 401:656, :),  fullfile(resfolder,"vie-10-jpeg.png"))     % 256×256 の一部
-imwrite(Yj2(181:436, 401:656, :), fullfile(resfolder,"vie-10-jp2.png"))
+imwrite(Yj(129:384, 129:384, :),  fullfile(resfolder,"vie-10-jpeg.png"))   % 中央の 256×256
+imwrite(Yj2(129:384, 129:384, :), fullfile(resfolder,"vie-10-jp2.png"))
 vie.savetex("vie-10-size-jpg", sprintf("%.1f", szJ/1e3));
 vie.savetex("vie-10-size-jp2", sprintf("%.1f", szJ2/1e3));
 vie.savetex("vie-10-psnr-jpg", sprintf("%.1f", psnrs(1)));
 vie.savetex("vie-10-psnr-jp2", sprintf("%.1f", psnrs(2)));
 %%
 %[text] ## 2 次元 DWT（3 レベル）と DCT の周波数配置
-%[text] 9/7 DWT（MATLAB の `bior4.4` ）を 3 レベル施し，係数を周波数配置で並べる（多重解像度表現）。
-[A1,H1,V1,D1] = dwt2(Xg, "bior4.4", "mode", "per");
+%[text] 9/7 DWT（MATLAB の `bior4.4` ）を 3 レベル施し，係数を周波数配置で並べる（多重解像度表現）。画像は第9回の vie-09-bdct と同じ msipimg04.tif（石造りの建物，256×256 のグレースケール）とし，第12回のスライドで並べたときに対応が分かるようにする。暗い空が平坦なので，係数の疎な様子が見やすい。
+Xs = im2double(vie.msipimg(4, 256, "gray"));   % 石造りの建物（256×256）
+[A1,H1,V1,D1] = dwt2(Xs, "bior4.4", "mode", "per");
 [A2,H2,V2,D2] = dwt2(A1, "bior4.4", "mode", "per");
 [A3,H3,V3,D3] = dwt2(A2, "bior4.4", "mode", "per");
 sc = @(c) min(abs(c)*4, 1);                     % 係数の絶対値を見やすく表示
@@ -59,8 +60,8 @@ L2 = [L3 sc(H2); sc(V2) sc(D2)];
 Wdwt = [L2 sc(H1); sc(V1) sc(D1)];
 imwrite(Wdwt, fullfile(resfolder,"vie-10-dwt3.png"))
 %[text] 比較のため，8×8 ブロック DCT の係数を周波数ごとに集めて並べ替える（各周波数 $ (u,v) $ の係数が一枚の縮小画像になる）。
-Yb = blockproc(Xg, [8 8], @(b) dct2(b.data));
-Wdct = zeros(size(Xg)); nb = size(Xg,1)/8;
+Yb = blockproc(Xs, [8 8], @(b) dct2(b.data));
+Wdct = zeros(size(Xs)); nb = size(Xs,1)/8;
 for u = 1:8, for v = 1:8
     sub = Yb(u:8:end, v:8:end);
     if u == 1 && v == 1, sub = sub/max(sub(:)); else, sub = sc(sub/2); end
@@ -94,6 +95,8 @@ Mos = [cat(2, tiles{1:5}); cat(2, tiles{6:10})];
 imwrite(imresize(Mos, 2, "nearest"), fullfile(resfolder,"vie-10-dwtbasis.png"))
 %%
 %[text] ## 画像復元の概要：ボケ（点広がり関数）
+%[text] 以降の画像復元の例では，教科書のサンプル画像 msipimg05.tif（石像の顔）を $ 256\\times256 $ 画素のグレースケールに縮小した画像を原画像 $ \\mathbf{x} $ とする。顔の輪郭や石の細かな模様があり，ボケとその除去の効果が見やすい。
+Xg = im2double(vie.msipimg(5, 256, "gray"));   % 石像の顔（256×256）
 %[text] 焦点ぼけなどは点広がり関数（PSF）との畳み込みで表される。PSF の例：標準偏差 $ \\sigma\_\\mathrm{g}=2 $ のガウス関数。周期境界（循環畳み込み）とし，測定行列 $ \\mathbf{H} $ の積と随伴 $ \\mathbf{H}^\\top $ の積を周波数領域で計算する（ $ \\mathbf{H}^\\top $ は相関，周波数応答の複素共役）。
 psf = fspecial("gaussian", 25, 2);
 Hf = psf2otf(psf, size(Xg));                    % 周期境界（循環畳み込み）の周波数応答
@@ -213,7 +216,7 @@ yline(psnrV, ":", "Color", cGray, "LineWidth", 1)
 plot(tPeak, psnrPeak, "o", "MarkerSize", 4, "MarkerFaceColor", cWarm, "MarkerEdgeColor", cWarm), hold off
 text(tPeak+8, psnrPeak+0.4, "\itt\rm=" + tPeak, "FontSize", 8, "Color", cWarm)
 text(nGd-5, psnrV+0.4, "観測", "FontSize", 8, "Color", cGray, "HorizontalAlignment", "right")
-xlim([0 nGd]), ylim([17 24.5]), grid on, set(gca, "FontSize", 9)
+xlim([0 nGd]), ylim([17 21.5]), grid on, set(gca, "FontSize", 9)
 ylabel("PSNR [dB]", "FontSize", 8), xlabel("反復回数 \itt", "FontSize", 8)
 savepng(fig, fullfile(resfolder,"vie-10-gd-deblur.png"), 300)
 vie.savetex("vie-10-gd-etaimg", sprintf("%g", etaGd));
@@ -221,9 +224,12 @@ vie.savetex("vie-10-gd-lam", sprintf("10^{%d}", round(log10(lams(2)))));
 %%
 %[text] ## ノイズと信号変換：ハール変換の詳細成分
 %[text] 原画像の詳細成分はほとんどが 0 付近（疎）だが，ノイズを加えると全体に広がる（密）。絶対値が閾値 0.02 未満の係数の割合で比べる。
-[~,Hc,Vc,Dc] = dwt2(Xg, "haar");
-Xn = Xg + 20/255*randn(size(Xg));
+%[text] この節（と次の節のヒストグラム）の画像は msipimg04.tif（石造りの建物，256×256 のグレースケール）とする。暗い空などの平坦な領域が広く，ノイズの有無による疎・密の違いがはっきり出る（8 枚の中で疎な係数の割合が最も大きい。石像の顔 msipimg05 では差が小さい）。
+Xs = im2double(vie.msipimg(4, 256, "gray"));   % 石造りの建物（256×256）
+[~,Hc,Vc,Dc] = dwt2(Xs, "haar");
+Xn = Xs + 20/255*randn(size(Xs));
 [~,Hn,Vn2,Dn] = dwt2(Xn, "haar");
+imwrite(Xs, fullfile(resfolder,"vie-10-sp-org.png"))
 imwrite(min(abs(Hc)*4,1), fullfile(resfolder,"vie-10-detail-clean.png"))
 imwrite(min(abs(Hn)*4,1), fullfile(resfolder,"vie-10-detail-noisy.png"))
 imwrite(min(max(Xn,0),1), fullfile(resfolder,"vie-10-noisy.png"))
