@@ -32,6 +32,15 @@ imshow(C)
 centers = cellfun(@(P) P(sz/2,sz/2), panels)
 imwrite(C, fullfile(resfolder,"vie-02-contrast.png"))
 vie.savetex("vie-02-contrast-fg", sprintf("%.2f",fg));
+%[text] スライドでは，まず背景をすべて白にした版を見せ，中央の正方形が同じ明るさに見えることを確かめてから，背景を切り替える（明暗の順応と対比の体験）。
+Cw = C;
+for k = 0:numel(bg)-1
+    cols = k*(sz+20) + (1:sz);
+    blk = Cw(:,cols);
+    blk(blk ~= fg) = 1;                      % 背景だけを白にする
+    Cw(:,cols) = blk;
+end
+imwrite(Cw, fullfile(resfolder,"vie-02-contrast-white.png"))
 %%
 %[text] ## 視覚特性のデモ：色順応
 %[text] 左に青みがかった画像，右に黄みがかった画像を並べ，間に白い点を置く。白い点をしばらく見つめると，目が色に順応する。
@@ -46,6 +55,22 @@ r = round(size(D,1)/2); c = size(X,2) + 12;       % 白い点の位置（中央�
 D(repmat((cc-c).^2 + (rr-r).^2 <= 16, [1 1 3])) = 1;
 imshow(D)
 imwrite(D, fullfile(resfolder,"vie-02-adapt.png"))
+%[text] 順応させるための画面：左を青一色，右を黄色一色で覆い，同じ位置に白い点を置く。スライドではこれをしばらく見つめたあと，上の画像に切り替える。
+blue   = reshape([0.10 0.25 1.00],1,1,3);
+yellow = reshape([1.00 0.88 0.10],1,1,3);
+A = [repmat(blue,size(X,1),size(X,2)) gap repmat(yellow,size(X,1),size(X,2))];
+A(repmat((cc-c).^2 + (rr-r).^2 <= 16, [1 1 3])) = 1;
+imwrite(A, fullfile(resfolder,"vie-02-adapt-cover.png"))
+%%
+%[text] ## 可視光のスペクトル
+%[text] 波長 380 nm〜780 nm の単色光の色を，近似式（D. Bruton による波長→RGB の変換）で描く。短波長側から紫・青・緑・黄・橙・赤と移り変わり，両端では視感度が下がるので暗くなる。
+lam = linspace(380, 780, 801);
+rgb = zeros(numel(lam),3);
+for k = 1:numel(lam)
+    rgb(k,:) = wl2rgb(lam(k));
+end
+Sp = repmat(reshape(rgb,1,[],3), 60, 1, 1);
+imwrite(Sp, fullfile(resfolder,"vie-02-spectrum.png"))
 %%
 %[text] ## 網膜像の大きさ
 %[text] 100 m 先にある高さ 15 m の木を見るとき，水晶体の中心から網膜までを約 17 mm とすると，網膜像の高さ $ h $ は相似な三角形から求まる。
@@ -274,3 +299,29 @@ end
 %[metadata:view]
 %   data: {"layout":"inline"}
 %---
+
+function c = wl2rgb(lam)
+%WL2RGB 波長 [nm] を近似的な表示色（RGB，0〜1）に変換する（D. Bruton の近似式）
+if lam < 440
+    c = [-(lam-440)/(440-380), 0, 1];
+elseif lam < 490
+    c = [0, (lam-440)/(490-440), 1];
+elseif lam < 510
+    c = [0, 1, -(lam-510)/(510-490)];
+elseif lam < 580
+    c = [(lam-510)/(580-510), 1, 0];
+elseif lam < 645
+    c = [1, -(lam-645)/(645-580), 0];
+else
+    c = [1, 0, 0];
+end
+% 視感度の低い両端を暗くする
+if lam < 420
+    f = 0.3 + 0.7*(lam-380)/(420-380);
+elseif lam > 700
+    f = 0.3 + 0.7*(780-lam)/(780-700);
+else
+    f = 1;
+end
+c = (f*c).^0.8;
+end
