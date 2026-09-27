@@ -351,9 +351,11 @@ lutRows = strings(1,3);                           % 表の行：成分名 & x=0,
 for c = 1:3
     lutRows(c) = chName(c) + " & " + strjoin(string(lut(:,c))', " & ");
 end
-mapItems = strings(1,nIdx);                       % 「画素値 → 色 (R,G,B)」
+%[text] 色は教科書の記法どおり列ベクトル $ \\vec{y}=\\boldsymbol{\\phi}(x)=(y_\\mathrm{R}\\ y_\\mathrm{G}\\ y_\\mathrm{B})^\\top $ で書く。
+mapItems = strings(1,nIdx);                       % 「φ(x) = (R G B)^T（色名）」
 for k = 1:nIdx
-    mapItems(k) = sprintf("%d → %s (%d,%d,%d)", k-1, lutName(k), lut(k,:));
+    mapItems(k) = sprintf("$\\bmphi(%d)=\\tr{(%d\\ \\ %d\\ \\ %d)}$（%s）", ...
+        k-1, lut(k,:), lutName(k));
 end
 vie.savetex("vie-04-pseudo-ex-idx", strjoin(string(0:nIdx-1), " & "));
 vie.savetex("vie-04-pseudo-ex-lut", strjoin(lutRows, "\\" + newline));
