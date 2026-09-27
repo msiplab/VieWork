@@ -69,6 +69,31 @@ for u = 1:8, for v = 1:8
 end, end
 imwrite(Wdct, fullfile(resfolder,"vie-10-dctsub.png"))
 %%
+%[text] ## 3 段 9/7 DWT の合成 FB の周波数振幅応答
+%[text] 参考資料 図 6.12(b)（3 段ハール DWT）と同じ見せ方で，9/7 DWT（ `bior4.4` ）の 3 段 DWT と等価な不等分割 FB の合成フィルタの周波数振幅応答を描く。等価フィルタはノーブル恒等式から $ F\_{3,0}(z)=F\_0(z^4)F\_0(z^2)F\_0(z) $ ， $ F\_{3,1}(z)=F\_1(z^4)F\_0(z^2)F\_0(z) $ ， $ F\_{2,1}(z)=F\_1(z^2)F\_0(z) $ ， $ F\_{1,1}(z)=F\_1(z) $ 。
+[~,~,f0,f1] = wfilters("bior4.4");              % 合成フィルタ F_0(z)，F_1(z)
+up = @(f,m) reshape([f; zeros(m-1, numel(f))], 1, []);   % z -> z^m（アップサンプル）
+F30 = conv(conv(up(f0,4), up(f0,2)), f0);
+F31 = conv(conv(up(f1,4), up(f0,2)), f0);
+F21 = conv(up(f1,2), f0);
+F11 = f1;
+Nw = 1024; w = linspace(0, pi, Nw);
+Fs = {F30, F31, F21, F11}; sty = ["-", "--", ":", "-."];
+fig = figure(Units="centimeters", Position=[2 2 7 7]);
+ax = axes(fig); hold(ax, "on")
+for i = 1:4
+    Hf = freqz(Fs{i}, 1, w);
+    plot(ax, w, 20*log10(abs(Hf) + eps), sty(i), "Color", "k", "LineWidth", 1.2)
+end
+hold(ax, "off"), grid(ax, "on"), box(ax, "on")
+xlim(ax, [0 pi]), ylim(ax, [-30 10])
+set(ax, "XTick", [0 pi/2 pi], "XTickLabel", ["$0$", "$\pi/2$", "$\pi$"], "TickLabelInterpreter","latex", "FontSize", 10)
+xlabel(ax, "$\omega$", "Interpreter","latex")
+ylabel(ax, "$20\log_{10}|F_{j,p}(\mathrm{e}^{\mathrm{j}\omega})|$ [dB]", "Interpreter","latex")
+legend(ax, ["$F_{3,0}(z)$", "$F_{3,1}(z)$", "$F_{2,1}(z)$", "$F_{1,1}(z)$"], "Interpreter","latex", "Location","southeast")
+exportgraphics(fig, fullfile(resfolder, "vie-10-dwt97-freq.png"), "Resolution", 300)
+close(fig)
+%%
 %[text] ## 9/7 DWT の基底画像
 %[text] 各サブバンドの中央の係数だけを 1 にして逆変換すると，そのサブバンドの基底画像が得られる。サイズが周波数に応じて異なり，互いに重なり合う。
 Nb = 64;
