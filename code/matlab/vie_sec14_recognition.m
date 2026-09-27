@@ -191,11 +191,18 @@ imwrite(~Eh, fullfile(resfolder,"vie-14-hough-canny.png"))
 pk = houghpeaks(Hh, 12, "Threshold", 0.3*max(Hh(:)));
 hl = houghlines(Eh, T, Rr, pk, "FillGap", 20, "MinLength", 60);
 cmapV = interp1([0 0.5 1], [1 1 1; cMain; 0 0.2 0.12], linspace(0, 1, 256));   % 白→緑→濃緑
+%[text] MATLAB の `hough` は $ \\theta\\in[-90^\\circ,90^\\circ) $ を使う。スライドの $ \\theta\\in[0,\\pi) $ ， $ \\rho\\in\\mathbb{R} $ に合わせ， $ \\theta<0 $ の列を $ (\\theta+180^\\circ,-\\rho) $ に移して表示する（同じ直線の表現）。
+assert(isequal(Rr, -fliplr(Rr)))                % rho の刻みは原点に対称
+neg = T < 0;
+H180 = [Hh(:,~neg) flipud(Hh(:,neg))];          % theta in [0,90) と，[-90,0) を反転した [90,180)
+T180 = [T(~neg) T(neg)+180];
+pkT = T(pk(:,2)); pkR = Rr(pk(:,1));
+pkR(pkT < 0) = -pkR(pkT < 0); pkT(pkT < 0) = pkT(pkT < 0) + 180;
 clf
-imshow(sqrt(rescale(Hh)), "XData", T, "YData", Rr, "InitialMagnification", "fit"), axis on, axis normal   % 投票度数（平方根）
+imshow(sqrt(rescale(H180)), "XData", T180, "YData", Rr, "InitialMagnification", "fit"), axis on, axis normal   % 投票度数（平方根）
 colormap(gca, cmapV), xlabel("\theta [度]"), ylabel("\rho"), hold on
-plot(T(pk(:,2)), Rr(pk(:,1)), "s", "Color", cWarm, "MarkerSize", 7, "LineWidth", 2), hold off
-xticks(-90:45:90), set(gca, "FontSize", 12)
+plot(pkT, pkR, "s", "Color", cWarm, "MarkerSize", 7, "LineWidth", 2), hold off
+xticks(0:45:180), set(gca, "FontSize", 12)
 exportgraphics(gca, fullfile(resfolder,"vie-14-hough-acc.png"), "Resolution", 150, "Width", 10, "Height", 7, "Units", "centimeters")
 clf, imshow(Gh), hold on
 for kk = 1:numel(hl)
