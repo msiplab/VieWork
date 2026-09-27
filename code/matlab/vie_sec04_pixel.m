@@ -192,11 +192,13 @@ Cl = im2uint8(0.35 + 0.3*im2double(C));           % 低対比画像
 Ch = histeq(C);                                   % 高対比画像
 imgs = {Cd, Cb, Cl, Ch};
 tags = ["dark","bright","low","high"];
+hmaxAll = 6000;                                   % 縦軸をそろえる（スライド 15・18 のヒストグラム共通．最大度数 5506 を含む）
+assert(max(cellfun(@(x) max(imhist(x)), [imgs {histeq(Cd,256), histeq(Cb,256)}])) <= hmaxAll)
 for k = 1:4
     imwrite(imgs{k}, fullfile(resfolder,"vie-04-hist-"+tags(k)+".png"))
     h = imhist(imgs{k});
     [fig, ax] = slidefig(4.2, 3.2);               % スライド上の高さ 19 mm に近い大きさ
-    histplot(ax, h, cMain, "画素値 {\itx}", "度数 {\ith}_{\itx}")
+    histplot(ax, h, cMain, "画素値 {\itx}", "度数 {\ith}_{\itx}", hmaxAll)
     exportgraphics(fig, fullfile(resfolder,"vie-04-hist-"+tags(k)+"-h.png"), "Resolution", 300)
     close(fig)
 end
@@ -209,7 +211,7 @@ for k = 1:2
     imwrite(E{k}, fullfile(resfolder,"vie-04-eq-"+tg(k)+".png"))
     h = imhist(E{k});
     [fig, ax] = slidefig(4.2, 3.2);
-    histplot(ax, h, cMain, "画素値 {\ity}", "度数 {\ith}_{\ity}")
+    histplot(ax, h, cMain, "画素値 {\ity}", "度数 {\ith}_{\ity}", hmaxAll)
     exportgraphics(fig, fullfile(resfolder,"vie-04-eq-"+tg(k)+"-h.png"), "Resolution", 300)
     close(fig)
 end
@@ -388,10 +390,10 @@ fig = figure(Units="centimeters", Position=[2 2 w h], Color="w");
 ax = axes(fig);
 end
 
-function histplot(ax, h, color, xlab, ylab)
-%HISTPLOT 256 階調のヒストグラムを棒グラフで描く
+function histplot(ax, h, color, xlab, ylab, hmax)
+%HISTPLOT 256 階調のヒストグラムを棒グラフで描く（縦軸の上限 hmax を共通にして比べやすくする）
 bar(ax, 0:255, h, 1, "EdgeColor","none", "FaceColor",color)
-xlim(ax, [0 255]), ylim(ax, [0 max(h)*1.05]), xticks(ax, [0 128 255])
+xlim(ax, [0 255]), ylim(ax, [0 hmax]), xticks(ax, [0 128 255]), yticks(ax, 0:2000:hmax)
 set(ax, "FontSize", 8)
 xlabel(ax, xlab), ylabel(ax, ylab)
 end
