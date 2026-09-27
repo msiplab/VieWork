@@ -26,22 +26,26 @@ vie.savetex("vie-04-neg-y", vie.arr2tex(y,"%d"));
 %[text] と，閾値 $ \\tau $ の二値化閾値処理を描く。 $ \\gamma\\to 0 $ の対比伸張は $ \\tau=1/2 $ の二値化閾値処理に一致する。
 stretch = @(x,g) (x<0.5).*(1-abs(1-2*x).^g)/2 + (x>=0.5).*(1+abs(2*x-1).^g)/2;
 xx = linspace(0,1,1001);
-clf
-plot(xx, xx, "--", "Color", cGray, "LineWidth", 1.5), hold on
-plot(xx, stretch(xx,0.3), "Color", cMain, "LineWidth", 2.5), hold off
-grid on, axis square
-xlabel("$x$","Interpreter","latex"), ylabel("$y=\phi(x)$","Interpreter","latex")
-title("対比伸張（\gamma=0.3）"), set(gca,"FontSize",14)
-exportgraphics(gca, fullfile(resfolder,"vie-04-cs-curve.png"), "Resolution", 150)
+[fig, ax] = slidefig(3.8, 3.8);                   % スライド上の大きさに近い図
+plot(ax, xx, xx, "--", "Color", cGray, "LineWidth", 1.6), hold(ax, "on")
+plot(ax, xx, stretch(xx,0.3), "Color", cMain, "LineWidth", 2.4), hold(ax, "off")
+grid(ax, "on"), axis(ax, "square"), xticks(ax, 0:0.5:1), yticks(ax, 0:0.5:1)
+xlabel(ax, "$x$","Interpreter","latex"), ylabel(ax, "$y=\phi(x)$","Interpreter","latex")
+set(ax, "FontSize", 9)
+title(ax, "\gamma=0.3", "FontWeight", "normal", "FontSize", 9)
+exportgraphics(fig, fullfile(resfolder,"vie-04-cs-curve.png"), "Resolution", 300)
+close(fig)
 %%
 %[text] 二値化閾値処理（ $ \\tau=1/2 $ ）
-clf
-plot(xx, xx, "--", "Color", cGray, "LineWidth", 1.5), hold on
-plot(xx, double(xx>=0.5), "Color", cMain, "LineWidth", 2.5), hold off
-grid on, axis square, ylim([-0.05 1.05])
-xlabel("$x$","Interpreter","latex"), ylabel("$y=\phi(x)$","Interpreter","latex")
-title("二値化閾値処理（\tau=0.5）"), set(gca,"FontSize",14)
-exportgraphics(gca, fullfile(resfolder,"vie-04-th-curve.png"), "Resolution", 150)
+[fig, ax] = slidefig(3.8, 3.8);
+plot(ax, xx, xx, "--", "Color", cGray, "LineWidth", 1.6), hold(ax, "on")
+plot(ax, xx, double(xx>=0.5), "Color", cMain, "LineWidth", 2.4), hold(ax, "off")
+grid(ax, "on"), axis(ax, "square"), ylim(ax, [-0.05 1.05]), xticks(ax, 0:0.5:1), yticks(ax, 0:0.5:1)
+xlabel(ax, "$x$","Interpreter","latex"), ylabel(ax, "$y=\phi(x)$","Interpreter","latex")
+set(ax, "FontSize", 9)
+title(ax, "\tau=0.5", "FontWeight", "normal", "FontSize", 9)
+exportgraphics(fig, fullfile(resfolder,"vie-04-th-curve.png"), "Resolution", 300)
+close(fig)
 %%
 %[text] ## 対比伸張の例
 %[text] 石像の顔 msipimg05 をグレースケール（ $ 256\\times256 $ ）にし， $ 0.3x+0.35 $ で画素値を 0.35〜0.65 に押し込めた低対比画像を作る。これに対比伸張（ $ \\gamma=0.3 $ ）と二値化閾値処理（ $ \\tau=0.5 $ ）を施す。
@@ -60,18 +64,21 @@ imwrite(Yth, fullfile(resfolder,"vie-04-th-out.png"))
 %%
 %[text] ## 基本的な輝度値変換
 %[text] 恒等変換，ネガポジ変換 $ y=-x+1 $ ，対数変換 $ y=c\\log(1+x) $ （ $ c=1/\\log 2 $ で $ [0,1]\\to[0,1] $ ），べき乗則変換 $ y=x^\\gamma $ を比べる。
-clf
-hold on
-plot(xx, xx,               "--", "Color", cGray, "LineWidth", 1.5)
-plot(xx, 1-xx,                   "Color", cCool, "LineWidth", 2)
-plot(xx, log(1+xx)/log(2),       "Color", cWarm, "LineWidth", 2)
-plot(xx, xx.^0.4,                "Color", cMain, "LineWidth", 2)
-plot(xx, xx.^2.5,          "-.", "Color", cMain, "LineWidth", 2)
-hold off
-grid on, box on, axis square
-legend(["恒等","ネガポジ","対数","べき乗則 \gamma=0.4","べき乗則 \gamma=2.5"], "Location","southeast")
-xlabel("$x$","Interpreter","latex"), ylabel("$y=\phi(x)$","Interpreter","latex"), set(gca,"FontSize",13)
-exportgraphics(gca, fullfile(resfolder,"vie-04-basic-curves.png"), "Resolution", 150)
+[fig, ax] = slidefig(6.4, 3.8);                   % 凡例は曲線に重ならないよう軸の右に置く
+hold(ax, "on")
+plot(ax, xx, xx,               "--", "Color", cGray, "LineWidth", 1.6)
+plot(ax, xx, 1-xx,                   "Color", cCool, "LineWidth", 2.2)
+plot(ax, xx, log(1+xx)/log(2),       "Color", cWarm, "LineWidth", 2.2)
+plot(ax, xx, xx.^0.4,                "Color", cMain, "LineWidth", 2.2)
+plot(ax, xx, xx.^2.5,          "-.", "Color", cMain, "LineWidth", 2.2)
+hold(ax, "off")
+grid(ax, "on"), box(ax, "on"), axis(ax, "square"), xticks(ax, 0:0.5:1), yticks(ax, 0:0.5:1)
+xlabel(ax, "$x$","Interpreter","latex"), ylabel(ax, "$y=\phi(x)$","Interpreter","latex"), set(ax, "FontSize", 9)
+lg = legend(ax, ["恒等","ネガポジ","対数","べき乗則 \gamma=0.4","べき乗則 \gamma=2.5"], ...
+    "Location","eastoutside", "FontSize", 8, "Box", "off");
+lg.ItemTokenSize = [16 18];
+exportgraphics(fig, fullfile(resfolder,"vie-04-basic-curves.png"), "Resolution", 300)
+close(fig)
 %%
 %[text] ## ネガポジ変換
 %[text] 教科書の例題「ネガポジ変換」：0 が黒，1 が白の実数型画像 $ \\mathsf{x}\\in[0,1]^{N\_1\\times N\_2} $ には， $ a=-1 $ のスケール処理と $ b=1 $ のバイアス処理を施して
@@ -187,11 +194,11 @@ imgs = {Cd, Cb, Cl, Ch};
 tags = ["dark","bright","low","high"];
 for k = 1:4
     imwrite(imgs{k}, fullfile(resfolder,"vie-04-hist-"+tags(k)+".png"))
-    clf
     h = imhist(imgs{k});
-    bar(0:255, h, 1, "EdgeColor","none", "FaceColor",cMain), xlim([0 255]), ylim([0 max(h)*1.05])
-    xlabel("画素値 {\itx}"), ylabel("度数 {\ith}_{\itx}"), set(gca,"FontSize",16)
-    exportgraphics(gca, fullfile(resfolder,"vie-04-hist-"+tags(k)+"-h.png"), "Resolution", 100)
+    [fig, ax] = slidefig(4.2, 3.2);               % スライド上の高さ 19 mm に近い大きさ
+    histplot(ax, h, cMain, "画素値 {\itx}", "度数 {\ith}_{\itx}")
+    exportgraphics(fig, fullfile(resfolder,"vie-04-hist-"+tags(k)+"-h.png"), "Resolution", 300)
+    close(fig)
 end
 %%
 %[text] ## ヒストグラム均等化の例
@@ -200,11 +207,11 @@ Ed = histeq(Cd, 256); Eb = histeq(Cb, 256);
 E = {Ed, Eb}; tg = ["dark","bright"];
 for k = 1:2
     imwrite(E{k}, fullfile(resfolder,"vie-04-eq-"+tg(k)+".png"))
-    clf
     h = imhist(E{k});
-    bar(0:255, h, 1, "EdgeColor","none", "FaceColor",cMain), xlim([0 255]), ylim([0 max(h)*1.05])
-    xlabel("画素値 {\ity}"), ylabel("度数 {\ith}_{\ity}"), set(gca,"FontSize",16)
-    exportgraphics(gca, fullfile(resfolder,"vie-04-eq-"+tg(k)+"-h.png"), "Resolution", 100)
+    [fig, ax] = slidefig(4.2, 3.2);
+    histplot(ax, h, cMain, "画素値 {\ity}", "度数 {\ith}_{\ity}")
+    exportgraphics(fig, fullfile(resfolder,"vie-04-eq-"+tg(k)+"-h.png"), "Resolution", 300)
+    close(fig)
 end
 psnrEq = psnr(Ed, Eb)                             % 均等化後の 2 枚はよく似ている
 vie.savetex("vie-04-eq-psnr", sprintf("%.1f",psnrEq));
@@ -260,13 +267,14 @@ calcL = sprintf("$\\phi(%d)=\\msipround{%d\\times\\frac{%d}{%d}}=\\msipround{%.4
 vie.savetex("vie-04-he-calc", strjoin([calc0, calc1, "$\ldots$", calcL], "，\ "));
 %[text] 均等化の前後の度数を棒グラフにする（前回演習課題（4）－2 の解説の図を参考に，縦軸をそろえる）。
 hmax = 15;
-figure("Position",[100 100 480 330])
-histbar(0:L-1, hx, hmax, cMain, "画素値 {\itx}", "度数 {\ith}_{\itx}")
-exportgraphics(gca, fullfile(resfolder,"vie-04-he-hx.png"), "Resolution", 150)
-clf
-histbar(0:L-1, hy, hmax, cMain, "画素値 {\ity}", "度数 {\ith}_{\ity}")
-exportgraphics(gca, fullfile(resfolder,"vie-04-he-hy.png"), "Resolution", 150)
-close(gcf)
+[fig, ax] = slidefig(5.6, 4.0);                   % スライド上の幅 42 mm に近い大きさ
+histbar(ax, 0:L-1, hx, hmax, cMain, "画素値 {\itx}", "度数 {\ith}_{\itx}")
+exportgraphics(fig, fullfile(resfolder,"vie-04-he-hx.png"), "Resolution", 300)
+close(fig)
+[fig, ax] = slidefig(4.8, 3.6);                   % スライド上の幅 .25\textwidth に近い大きさ
+histbar(ax, 0:L-1, hy, hmax, cMain, "画素値 {\ity}", "度数 {\ith}_{\ity}")
+exportgraphics(fig, fullfile(resfolder,"vie-04-he-hy.png"), "Resolution", 300)
+close(fig)
 %%
 %[text] ## カラー画像処理：明るさの調整
 %[text] マカロン msipimg03（ $ 256\\times256 $ ）を明るくする。RGB 空間では R, G, B それぞれに $ \\gamma=0.4 $ のべき乗則変換を施す。HSV 空間では明度 V だけに施し，色相 H と彩度 S は保つ（前回スライドの HSI 空間処理に相当）。
@@ -314,14 +322,18 @@ imwrite(Peq_hsv, fullfile(resfolder,"vie-04-col-eq-hsv.png"))
 %[text] ## 擬似カラー
 %[text] グレースケール画像の画素値 $ x\\in[0,1] $ を，位相をずらした三角波の参照表 $ \\vec{y}=(\\phi\_\\mathrm{R}(x)\\ \\ \\phi\_\\mathrm{G}(x)\\ \\ \\phi\_\\mathrm{B}(x))^\\top $ で色に対応づける（スカラー値を入力とするベクトル関数処理）。わずかな画素値の違いが色の違いとして強調される。曲線の色は R, G, B の各成分を表すので，ロゴの配色にはしない。
 tri = @(x,ph) 1 - abs(2*mod(1.5*x + ph, 1) - 1);  % 周期 2/3 の三角波
-clf
-plot(xx, tri(xx,0), "Color", [0.85 0 0], "LineWidth", 2), hold on
-plot(xx, tri(xx,1/3), "Color", [0 0.6 0], "LineWidth", 2)
-plot(xx, tri(xx,2/3), "Color", [0 0 0.85], "LineWidth", 2), hold off
-grid on, xlabel("画素値 {\itx}"), ylabel("出力")
-legend(["\phi_{\rmR}({\itx})","\phi_{\rmG}({\itx})","\phi_{\rmB}({\itx})"],"Location","eastoutside")
-set(gca,"FontSize",14)
-exportgraphics(gca, fullfile(resfolder,"vie-04-pseudo-lut.png"), "Resolution", 150)
+[fig, ax] = slidefig(6.0, 3.9);                   % 凡例は曲線の上の余白に横並びで置く
+plot(ax, xx, tri(xx,0), "Color", [0.85 0 0], "LineWidth", 2.2), hold(ax, "on")
+plot(ax, xx, tri(xx,1/3), "Color", [0 0.6 0], "LineWidth", 2.2)
+plot(ax, xx, tri(xx,2/3), "Color", [0 0 0.85], "LineWidth", 2.2), hold(ax, "off")
+grid(ax, "on"), xlabel(ax, "画素値 {\itx}"), ylabel(ax, "出力")
+ylim(ax, [0 1.42]), yticks(ax, 0:0.5:1), xticks(ax, 0:0.5:1)
+set(ax, "FontSize", 9)
+lg = legend(ax, ["\phi_{\rmR}({\itx})","\phi_{\rmG}({\itx})","\phi_{\rmB}({\itx})"], ...
+    "Location","north", "Orientation","horizontal", "FontSize", 8);
+lg.ItemTokenSize = [14 18];
+exportgraphics(fig, fullfile(resfolder,"vie-04-pseudo-lut.png"), "Resolution", 300)
+close(fig)
 G = im2double(vie.msipimg(8, 256, "gray"));   % スイカ（グレースケール）
 Yps = cat(3, tri(G,0), tri(G,1/3), tri(G,2/3));
 tiledlayout(1,2,"TileSpacing","compact","Padding","compact")
@@ -370,14 +382,28 @@ vie.savetex("vie-04-pseudo-ex-map", strjoin(mapItems, "，"));
 %[text] © Copyright, Shogo MURAMATSU, All rights reserved.
 %%
 %[text] ## ローカル関数
-function histbar(v, h, hmax, color, xlab, ylab)
+function [fig, ax] = slidefig(w, h)
+%SLIDEFIG スライド上の大きさに近い物理サイズ（cm）の図と軸を作る
+fig = figure(Units="centimeters", Position=[2 2 w h], Color="w");
+ax = axes(fig);
+end
+
+function histplot(ax, h, color, xlab, ylab)
+%HISTPLOT 256 階調のヒストグラムを棒グラフで描く
+bar(ax, 0:255, h, 1, "EdgeColor","none", "FaceColor",color)
+xlim(ax, [0 255]), ylim(ax, [0 max(h)*1.05]), xticks(ax, [0 128 255])
+set(ax, "FontSize", 8)
+xlabel(ax, xlab), ylabel(ax, ylab)
+end
+
+function histbar(ax, v, h, hmax, color, xlab, ylab)
 %HISTBAR 度数の棒グラフを，棒の上に度数を添えて描く
-bar(v, h, 0.7, "FaceColor", color, "EdgeColor", "none")
-text(v, h, string(h), "HorizontalAlignment", "center", ...
-    "VerticalAlignment", "bottom", "FontSize", 14)
-xlim([v(1)-0.7 v(end)+0.7]), ylim([0 hmax]), xticks(v)
-box off
-xlabel(xlab), ylabel(ylab), set(gca, "FontSize", 14)
+bar(ax, v, h, 0.7, "FaceColor", color, "EdgeColor", "none")
+text(ax, v, h, string(h), "HorizontalAlignment", "center", ...
+    "VerticalAlignment", "bottom", "FontSize", 9)
+xlim(ax, [v(1)-0.7 v(end)+0.7]), ylim(ax, [0 hmax]), xticks(ax, v)
+box(ax, "off")
+xlabel(ax, xlab), ylabel(ax, ylab), set(ax, "FontSize", 9)
 end
 
 function cellplot(rgb, labels)
