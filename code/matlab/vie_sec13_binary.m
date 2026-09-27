@@ -5,9 +5,9 @@
 %[text:tableOfContents]{"heading":"目次"}
 %%
 %[text] ## 準備
-[datfolder,resfolder] = vie.prjfolders();
-vie.download_img(false)
-X = double(imread("cameraman.tif"));            % 8 bit（0〜255）
+[~,resfolder] = vie.prjfolders();
+%[text] 写真は参考資料のサンプル画像 msipimg08（スイカ，参考資料の図 2.5 と同じ画像）をグレースケールにし， $ 256\\times256 $ に縮小して使う。縞模様のスイカが暗い背景の中にあり，閾値の選び方の違い（階調の中央と大津法）がはっきり見える。
+X = double(vie.msipimg(8, 256, "gray"));        % 8 bit（0〜255），256×256
 %[text] 図の配色はロゴの 3 色（メインの緑 #008855，青 #2E75B6，橙 #C55A11）と灰色にそろえる。
 cMain = [0 136 85]/255;                          % 緑（メイン）
 cCool = [46 117 182]/255;                        % 青（寒色系）：データ
@@ -80,7 +80,7 @@ vie.savetex("vie-13-otsu-x",   vie.arr2tex(Xe, "%d"));
 vie.savetex("vie-13-otsu-y",   vie.arr2tex(Ye, "%d"));
 %%
 %[text] ## 大津法による処理画像
-%[text] 教科書の図 2.7(b) は教科書の画像（ $ 96\\times96 $ ）で $ \\tau^\\star=84 $ 。ここでは cameraman（ $ 256\\times256 $ ）に同じ手順を適用する。
+%[text] 教科書の図 2.7(b) は教科書の画像（ $ 96\\times96 $ ）で $ \\tau^\\star=84 $ 。ここでは同じ画像 msipimg08 を $ 256\\times256 $ に縮小したものに同じ手順を適用する（縮小のため閾値は少し異なる）。
 tauC = otsu(X, 256)
 imwrite(double(X >= tauC), fullfile(resfolder,"vie-13-otsu.png"))
 vie.savetex("vie-13-otsu-cam", sprintf("%d", tauC));
@@ -150,9 +150,8 @@ vie.savetex("vie-13-ed25-n", sprintf("%d", sum(E25(:))));
 vie.savetex("vie-13-ed25", vie.arr2tex(E25, "%d"));
 %%
 %[text] ## カラー画像への応用：24 bpp → 8 bpp
-%[text] R, G, B を 3, 3, 2 bit（計 8 bpp）に減らす。線形量子化と成分ごとの誤差拡散を比べる。
-Xc = im2double(imread(fullfile(datfolder,"kodim23.png")));
-Xc = min(max(imresize(Xc, 0.5), 0), 1);
+%[text] R, G, B を 3, 3, 2 bit（計 8 bpp）に減らす。線形量子化と成分ごとの誤差拡散を比べる。写真は msipimg01（海岸， $ 256\\times256 $ に縮小）。空のなめらかな階調で，線形量子化の擬似輪郭と誤差拡散の効果がはっきり見える。
+Xc = im2double(vie.msipimg(1, 256));
 bits = [3 3 2];
 Xlq = zeros(size(Xc)); Xed = zeros(size(Xc));
 for k = 1:3
@@ -163,8 +162,8 @@ end
 imwrite(Xc,  fullfile(resfolder,"vie-13-col-org.png"))
 imwrite(Xlq, fullfile(resfolder,"vie-13-col-lq.png"))
 imwrite(Xed, fullfile(resfolder,"vie-13-col-ed.png"))
-imwrite(imresize(Xlq(61:140,241:320,:), 3, "nearest"), fullfile(resfolder,"vie-13-col-lq-zoom.png"))
-imwrite(imresize(Xed(61:140,241:320,:), 3, "nearest"), fullfile(resfolder,"vie-13-col-ed-zoom.png"))
+imwrite(imresize(Xlq(1:60,141:200,:), 4, "nearest"), fullfile(resfolder,"vie-13-col-lq-zoom.png"))
+imwrite(imresize(Xed(1:60,141:200,:), 4, "nearest"), fullfile(resfolder,"vie-13-col-ed-zoom.png"))
 %%
 %[text] ## 順序統計フィルタ
 %[text] 近傍領域 $ \\mathcal{N}\_\\mathrm{f} $ （ $ 3\\times3 $ ）の画素値を昇順に並べ， $ K $ 番目の値を出力する（教科書 3.3 節）。前回スライドの例で，中央値（ $ K=(|\\mathcal{N}\_\\mathrm{f}|+1)/2=5 $ ），最小値（ $ K=1 $ ），最大値（ $ K=|\\mathcal{N}\_\\mathrm{f}|=9 $ ）を求める。
