@@ -80,9 +80,9 @@ for k = 1:2
 end
 %%
 %[text] ## 平滑化の処理例（ガウス性ノイズ）
-%[text] circuit.tif に標準偏差 0.05 のガウス性ノイズを加え，平均値フィルタと加重平均値フィルタで平滑化する。
+%[text] 参考資料のサンプル画像 msipimg08（スイカ）をグレースケールにして $ 256\\times 256 $ 画素に縮小し，標準偏差 0.05 のガウス性ノイズを加え，平均値フィルタと加重平均値フィルタで平滑化する。暗い背景や縞の内側など平坦な部分が多く，ノイズの除去が目で見ても PSNR でもはっきり分かる（細かな模様の多い画像では平滑化によるボケの損失が勝ち，PSNR がかえって下がる）。
 rng(0)                                         % 乱数を固定して再現性を保つ
-C = im2double(imread("circuit.tif"));
+C = im2double(vie.msipimg(8, 256, "gray"));
 Cg = imnoise(C, "gaussian", 0, 0.05^2);
 Cbox = imfilter(Cg, fbox, "replicate");
 Cgau = imfilter(Cg, fg16/16, "replicate");
@@ -204,9 +204,8 @@ vie.savetex("vie-05-lap-e11", e);
 vie.savetex("vie-05-lap-y11", sprintf("%d", Ylap(2,2)));
 %%
 %[text] ## ラプラシアンフィルタの処理例
-%[text] moon.tif に 4 近傍・8 近傍ラプラシアンを施す。出力は負の値を含むので，表示のため $ 0.5+ y $ （バイアス処理）で示す。
-Mo = im2double(imread("moon.tif"));
-Mo = imresize(Mo, 0.5);
+%[text] 参考資料のサンプル画像 msipimg04（石造りの建物）をグレースケールにして $ 256\\times 256 $ 画素に縮小し，4 近傍・8 近傍ラプラシアンを施す。暗い背景と平坦な地面に囲まれたアーチの輪郭が，変化部としてはっきり抽出される。出力は負の値を含むので，表示のため $ 0.5+ y $ （バイアス処理）で示す。
+Mo = im2double(vie.msipimg(4, 256, "gray"));
 L4 = imfilter(Mo, flap4, "replicate");
 L8 = imfilter(Mo, flap8, "replicate");
 figure, tiledlayout(1,3,"TileSpacing","compact","Padding","compact")
@@ -273,8 +272,8 @@ vie.savetex("vie-05-mag-e11", em);
 vie.savetex("vie-05-mag-y11", sprintf("%.2f", Ymag(2,2)));
 %%
 %[text] ## 勾配フィルタの処理例
-%[text] coins.png にプレウィットとソーベルを施し，勾配の大きさを表示する（最大値で正規化）。
-Co = im2double(imread("coins.png"));
+%[text] 参考資料のサンプル画像 msipimg03（マカロン）をグレースケールにして $ 256\\times 256 $ 画素に縮小し，プレウィットとソーベルを施して勾配の大きさを表示する（最大値で正規化）。規則的に並ぶ丸い菓子の輪郭が抽出される。
+Co = im2double(vie.msipimg(3, 256, "gray"));
 fsv = [-1 -2 -1; 0 0 0; 1 2 1]; fsh = fsv';
 Gp = hypot(imfilter(Co,fpv,"replicate"), imfilter(Co,fph,"replicate"));
 Gs = hypot(imfilter(Co,fsv,"replicate"), imfilter(Co,fsh,"replicate"));
