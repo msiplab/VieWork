@@ -6,7 +6,7 @@
 %[text:tableOfContents]{"heading":"目次"}
 %%
 %[text] ## 準備
-%[text] 画像は MATLAB 付属のものを使う（ダウンロード不要）。図の配色は，色そのものが内容の画像を除き，ロゴの 3 色（メインの緑，青，橙）と灰色にそろえる。
+%[text] 写真は参考資料のサンプル画像 msipimg01〜08（512×512 のカラー）に限り，共通関数 vie.msipimg で読み込む。低対比・暗い・明るい画像など特定の性質が要る例は，これらを元にスクリプトの中で作る。図の配色は，色そのものが内容の画像を除き，ロゴの 3 色（メインの緑，青，橙）と灰色にそろえる。
 [~,resfolder] = vie.prjfolders();
 cMain = [0 136 85]/255;     % メイン（緑）#008855
 cCool = [46 117 182]/255;   % 寒色系（青）#2E75B6
@@ -44,11 +44,11 @@ title("二値化閾値処理（\tau=0.5）"), set(gca,"FontSize",14)
 exportgraphics(gca, fullfile(resfolder,"vie-04-th-curve.png"), "Resolution", 150)
 %%
 %[text] ## 対比伸張の例
-%[text] 低コントラスト画像 pout.tif（画素値がおよそ 0.32〜0.58 に集中）に対比伸張（ $ \\gamma=0.3 $ ）と二値化閾値処理（ $ \\tau=0.45 $ ）を施す。
-X = im2double(imread("pout.tif"));
+%[text] 石像の顔 msipimg05 をグレースケール（ $ 256\\times256 $ ）にし， $ 0.3x+0.35 $ で画素値を 0.35〜0.65 に押し込めた低対比画像を作る。これに対比伸張（ $ \\gamma=0.3 $ ）と二値化閾値処理（ $ \\tau=0.5 $ ）を施す。
+X = 0.3*im2double(vie.msipimg(5, 256, "gray")) + 0.35;   % 低対比画像を作る
 range0 = [min(X(:)) max(X(:))]
 Ycs = stretch(X, 0.3);
-Yth = double(X >= 0.45);
+Yth = double(X >= 0.5);
 range1 = [min(Ycs(:)) max(Ycs(:))]
 tiledlayout(1,3,"TileSpacing","compact","Padding","compact")
 nexttile, imshow(X),   title("原画像")
@@ -76,8 +76,8 @@ exportgraphics(gca, fullfile(resfolder,"vie-04-basic-curves.png"), "Resolution",
 %[text] ## ネガポジ変換
 %[text] 教科書の例題「ネガポジ変換」：0 が黒，1 が白の実数型画像 $ \\mathsf{x}\\in[0,1]^{N\_1\\times N\_2} $ には， $ a=-1 $ のスケール処理と $ b=1 $ のバイアス処理を施して
 %[text]{"align":"center"} $ y=\\phi(x)=-x+1,\\quad x\\in[0,1] $
-%[text] とする。整数型 $ x\\in\\{0,1,\\ldots,L-1\\} $ では，画素値を $ L-1 $ で割って $ [0,1] $ に写したものに同じ変換を施し， $ L-1 $ 倍して戻せば $ y=L-1-x $ となる。MRI 画像（8-bit， $ L=256 $ ）で両者が一致することを確かめる。
-M = imread("mri.tif");
+%[text] とする。整数型 $ x\\in\\{0,1,\\ldots,L-1\\} $ では，画素値を $ L-1 $ で割って $ [0,1] $ に写したものに同じ変換を施し， $ L-1 $ 倍して戻せば $ y=L-1-x $ となる。石造りの建物 msipimg04（グレースケール，8-bit， $ L=256 $ ）で両者が一致することを確かめる。暗いアーチの奥の構造がネガ画像で見やすくなる。
+M = vie.msipimg(4, 256, "gray");
 Mneg = 255 - M;                                   % 整数型：y = L-1-x
 errNeg = max(abs(im2double(Mneg) - (-im2double(M) + 1)), [], "all")   % 実数型 y=-x+1 との差（0 になる）
 assert(errNeg < 1e-12)
@@ -148,10 +148,9 @@ vie.savetex("vie-04-pow-b", sprintf("%g",ypow(2)));
 vie.savetex("vie-04-pow-s", sprintf("%d",s));
 %%
 %[text] ## 暗い画像のべき乗則変換
-%[text] 暗い X 線画像 spine.tif（平均画素値が約 0.06）を最小最大正規化して，べき乗則変換（ $ \\gamma=0.6,0.4,0.3 $ ）で明るくする。
-S0 = im2double(imread("spine.tif"));
-meanS = mean(S0(:))                        % 正規化前の平均画素値
-S = mat2gray(S0);                          % 最小最大正規化
+%[text] 石像の顔 msipimg05（グレースケール）を $ x^3 $ で暗くした画像を用意し，べき乗則変換（ $ \\gamma=0.6,0.4,0.3 $ ）で明るくする。
+S = im2double(vie.msipimg(5, 256, "gray")).^3;   % 暗い画像を作る
+meanS = mean(S(:))                         % 平均画素値
 gd = [0.6 0.4 0.3];
 tiledlayout(1,4,"TileSpacing","compact","Padding","compact")
 nexttile, imshow(S), title("原画像")
@@ -163,8 +162,8 @@ imwrite(S, fullfile(resfolder,"vie-04-dark-org.png"))
 vie.savetex("vie-04-dark-mean", sprintf("%.2f",meanS));
 %%
 %[text] ## 明るい画像のべき乗則変換
-%[text] 航空写真 westconcordorthophoto.png を $ 0.5+0.5x $ で明るく白っぽくした画像を用意し，べき乗則変換（ $ \\gamma=3,4,5 $ ）で暗くして濃淡を取り戻す。
-A = im2double(imread("westconcordorthophoto.png"));
+%[text] 海岸 msipimg01（グレースケール）を $ 0.5+0.5x $ で明るく白っぽくした画像を用意し，べき乗則変換（ $ \\gamma=3,4,5 $ ）で暗くして濃淡を取り戻す。
+A = im2double(vie.msipimg(1, 256, "gray"));
 B = 0.5 + 0.5*A;                           % 白っぽい（明るい）画像を作る
 meanB = mean(B(:))
 gb = [3 4 5];
@@ -178,8 +177,8 @@ imwrite(B, fullfile(resfolder,"vie-04-bright-org.png"))
 vie.savetex("vie-04-bright-mean", sprintf("%.2f",meanB));
 %%
 %[text] ## ヒストグラムの例
-%[text] cameraman.tif から暗い・明るい・低対比・高対比の 4 種類の画像を作り，ヒストグラム（度数 $ h\_x $ ）を比べる。
-C = imread("cameraman.tif");
+%[text] スイカ msipimg08（参考資料の図 2.5 と同じ画像．グレースケール， $ 256\\times256 $ ）から暗い・明るい・低対比・高対比の 4 種類の画像を作り，ヒストグラム（度数 $ h\_x $ ）を比べる。
+C = vie.msipimg(8, 256, "gray");
 Cd = im2uint8(0.45*im2double(C));                 % 暗い画像
 Cb = im2uint8(0.55 + 0.45*im2double(C));          % 明るい画像
 Cl = im2uint8(0.35 + 0.3*im2double(C));           % 低対比画像
@@ -270,9 +269,9 @@ exportgraphics(gca, fullfile(resfolder,"vie-04-he-hy.png"), "Resolution", 150)
 close(gcf)
 %%
 %[text] ## カラー画像処理：明るさの調整
-%[text] peppers.png を明るくする。RGB 空間では R, G, B それぞれに $ \\gamma=0.4 $ のべき乗則変換を施す。HSV 空間では明度 V だけに施し，色相 H と彩度 S は保つ（前回スライドの HSI 空間処理に相当）。
-P = im2double(imread("peppers.png"));
-P = min(max(imresize(P, 0.5), 0), 1);         % 縮小時のオーバーシュートを [0,1] に収める
+%[text] マカロン msipimg03（ $ 256\\times256 $ ）を明るくする。RGB 空間では R, G, B それぞれに $ \\gamma=0.4 $ のべき乗則変換を施す。HSV 空間では明度 V だけに施し，色相 H と彩度 S は保つ（前回スライドの HSI 空間処理に相当）。
+P = im2double(vie.msipimg(3, 256));
+P = min(max(P, 0), 1);                        % 縮小時のオーバーシュートを [0,1] に収める
 Prgb = P.^0.4;
 Phsv = rgb2hsv(P); Phsv(:,:,3) = Phsv(:,:,3).^0.4; Phsv = hsv2rgb(Phsv);
 satRGB = mean(reshape(rgb2hsv(Prgb),[],3)*[0;1;0]);   % 平均彩度（RGB 空間処理）
@@ -323,7 +322,7 @@ grid on, xlabel("画素値 {\itx}"), ylabel("出力")
 legend(["\phi_{\rmR}({\itx})","\phi_{\rmG}({\itx})","\phi_{\rmB}({\itx})"],"Location","eastoutside")
 set(gca,"FontSize",14)
 exportgraphics(gca, fullfile(resfolder,"vie-04-pseudo-lut.png"), "Resolution", 150)
-G = im2double(imread("circuit.tif"));
+G = im2double(vie.msipimg(8, 256, "gray"));   % スイカ（グレースケール）
 Yps = cat(3, tri(G,0), tri(G,1/3), tri(G,2/3));
 tiledlayout(1,2,"TileSpacing","compact","Padding","compact")
 nexttile, imshow(G),   title("モノクロ画像")
