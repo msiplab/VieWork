@@ -88,26 +88,30 @@ end
 imwrite(Xbox, fullfile(resfolder,"vie-01-image.png"))
 %%
 %[text] ## 信号の解析（一次元）：近似成分と詳細成分
-%[text] 前回スライドの例を計算する。信号 $ x[n] $ に対し，**隣同士を足して 2 で割る**と近似成分 $ a[n] $，**右隣を引いて 2 で割る**と詳細成分 $ d[n] $ が得られる。
-%[text]{"align":"center"} $ a[n] = \\frac{1}{2}\\left(x[n]+x[n+1]\\right),\\qquad d[n] = \\frac{1}{2}\\left(x[n]-x[n+1]\\right) $
-x = [3 1 3 1 5 3 5];
-a = (x(1:end-1) + x(2:end))/2      % 近似成分
-d = (x(1:end-1) - x(2:end))/2      % 詳細成分
+%[text] 前回スライドの例を計算する。信号 $ x[n]\\ (n=0,1,2,\\ldots) $ に対し，**隣同士を足して 2 で割る**と近似成分 $ a[n] $，**左隣から引いて 2 で割る**と詳細成分 $ d[n] $ が得られる。
+%[text] 現在と過去の標本だけを使う**因果的**な形に書く。こうすると，次節のフィルタ $ H\_0(z)=\\frac{1}{2}(1+z^{-1}) $，$ H\_1(z)=\\frac{1}{2}(-1+z^{-1}) $ の出力そのものになる。
+%[text]{"align":"center"} $ a[n] = \\frac{1}{2}\\left(x[n]+x[n-1]\\right),\\qquad d[n] = \\frac{1}{2}\\left(-x[n]+x[n-1]\\right),\\qquad n=1,2,\\ldots $
+x = [3 1 3 1 5 3 5];               % x(1) が x[0]
+a = (x(2:end) + x(1:end-1))/2      % 近似成分 a[n]，n = 1,2,...
+d = (-x(2:end) + x(1:end-1))/2     % 詳細成分 d[n]，n = 1,2,...
+%[text] 次節の $ H\_0(z) $，$ H\_1(z) $ で x をフィルタリングした出力（n=1 以降）と一致することを確かめる。
+a_f = filter([1 1]/2, 1, x);  d_f = filter([-1 1]/2, 1, x);
+assert(isequal(a, a_f(2:end)) && isequal(d, d_f(2:end)))
 %[text] 近似成分はゆっくり変わる成分（低周波成分），詳細成分は細かく変わる成分（高周波成分）を担う。
 vie.savetex("vie-01-haar-x",   vie.arr2tex(x(1:end-1)));
-vie.savetex("vie-01-haar-sum", vie.arr2tex(x(1:end-1)+x(2:end)));
-vie.savetex("vie-01-haar-dif", vie.arr2tex(x(1:end-1)-x(2:end)));
+vie.savetex("vie-01-haar-sum", vie.arr2tex(x(2:end)+x(1:end-1)));    % x[n]+x[n-1]
+vie.savetex("vie-01-haar-dif", vie.arr2tex(-x(2:end)+x(1:end-1)));   % x[n-1]-x[n]
 vie.savetex("vie-01-haar-a",   vie.arr2tex(a));
 vie.savetex("vie-01-haar-d",   vie.arr2tex(d));
 %%
 %[text] ## 信号の合成：足し合わせると元に戻る
-%[text] 定義から $ a[n]+d[n] = x[n] $ が成り立つ。足し算と引き算だけの分解だが，**信号の情報を逃さない**立派な成分分析法である。
+%[text] 定義から $ a[n]+d[n] = x[n-1] $ が成り立つ。1 標本遅れるだけで元に戻る（全体の伝達関数 $ T(z)=H\_0(z)+H\_1(z)=z^{-1} $）。足し算と引き算だけの分解だが，**信号の情報を逃さない**立派な成分分析法である。
 xr = a + d
-isequal(xr, x(1:end-1))
+assert(isequal(xr, x(1:end-1)))    % x[n-1]，n = 1,2,...
 vie.savetex("vie-01-haar-rec", vie.arr2tex(xr));
 %[text] 近似成分を緑，詳細成分を青，両者の和を橙で描く。和の図には元の信号 $ x[n] $ を灰色の白抜きの丸で重ね，一致することを示す。
 tiledlayout(1,3,"TileSpacing","compact","Padding","compact")
-nn = 0:numel(a)-1;
+nn = 1:numel(a);                   % n = 1,2,...
 nexttile, stem(nn, a, "filled", "Color",cmain), ylim([-3 6]), grid on
 xlabel("\itn"), title("近似成分 \ita\rm[\itn\rm]")
 nexttile, stem(nn, d, "filled", "Color",ccool), ylim([-3 6]), grid on
@@ -115,7 +119,7 @@ xlabel("\itn"), title("詳細成分 \itd\rm[\itn\rm]")
 nexttile, stem(nn, xr, "filled", "Color",cwarm), hold on
 plot(nn, x(1:end-1), "o", "Color",cgray, "MarkerSize",10, "LineWidth",1.2), hold off
 ylim([-3 6]), grid on
-xlabel("\itn"), title("\ita\rm[\itn\rm]+\itd\rm[\itn\rm]（○：\itx\rm[\itn\rm]）")
+xlabel("\itn"), title("\ita\rm[\itn\rm]+\itd\rm[\itn\rm]（○：\itx\rm[\itn\rm-1]）")
 set(gcf,"Units","centimeters","Position",[2 2 figw 4.5])
 drawnow   % 大きさの変更を反映させてから書き出す
 exportgraphics(gcf, fullfile(resfolder,"vie-01-haar.png"), "Resolution",200)
