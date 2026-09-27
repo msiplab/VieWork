@@ -94,6 +94,53 @@ legend(ax, ["$F_{3,0}(z)$", "$F_{3,1}(z)$", "$F_{2,1}(z)$", "$F_{1,1}(z)$"], "In
 exportgraphics(fig, fullfile(resfolder, "vie-10-dwt97-freq.png"), "Resolution", 300)
 close(fig)
 %%
+%[text] ## 時空間－周波数のタイル：ブロック DCT と 9/7 DWT（参考資料 6.4.2 項）
+%[text] 横軸を位置 $ n $ ，縦軸を周波数 $ \\omega $ とする平面のタイルで，等分割 FB（8 点ブロック DCT）とオクターブ分割 FB（3 段 9/7 DWT）の時空間分解能を比べる。各帯域には，隣り合う二つの基底（合成フィルタのインパルス応答）をストライドだけずらして 2 色で重ねる。DCT の基底はブロック内に収まり重ならない（ストライド 8）。DWT の基底はタイルからはみ出して重なり，ストライドは高域ほど小さい（2，4，8）。
+Nt = 32;                                         % 位置の範囲 0..Nt-1
+C8 = dctmtx(8)';                                  % 8 点 DCT の基底ベクトル（列）
+bands97 = {F11, F21, F31, F30};                   % 高域から：F_{1,1}, F_{2,1}, F_{3,1}, F_{3,0}
+lo97 = [pi/2 pi/4 pi/8 0]; hi97 = [pi pi/2 pi/4 pi/8]; st97 = [2 4 8 8];
+cA = cCool; cB = cWarm;
+for panel = 1:2
+    fig = figure(Units="centimeters", Position=[2 2 5.0 4.6]);
+    ax = axes(fig, Position=[0.11 0.17 0.7 0.79]); hold(ax, "on")
+    if panel == 1                                 % ブロック DCT：8 帯域 × 幅 8
+        lo = (0:7)*pi/8; hi = (1:8)*pi/8; st = 8*ones(1,8);
+    else
+        lo = lo97; hi = hi97; st = st97;
+    end
+    for b = 1:numel(lo)
+        for x0 = 0:st(b):Nt-1                     % タイル
+            rectangle(ax, "Position", [x0-0.5, lo(b), st(b), hi(b)-lo(b)], "EdgeColor", 0.7*[1 1 1], "FaceColor", [0.93 0.97 0.95])
+        end
+        yc = (lo(b)+hi(b))/2; amp = 0.42*(hi(b)-lo(b));
+        if panel == 1
+            g = C8(:, b); n0 = [8 16];            % 隣り合う 2 ブロック
+        else
+            g = bands97{b}(:); c = round((Nt-numel(g))/2); n0 = [c c+st(b)];
+        end
+        g = g/max(abs(g));
+        if all(abs(g - g(1)) < 1e-12), g = 0.4*g; end   % 直流の基底は帯域の中ほどに描く
+        cols = {cA, cB};
+        for k = 1:2
+            nn = n0(k) + (0:numel(g)-1);
+            plot(ax, nn, yc + amp*g, "-", "Color", cols{k}, "LineWidth", 1.1)
+        end
+        text(ax, Nt+0.3, yc, sprintf("%d", st(b)), "FontSize", 7, "HorizontalAlignment","left")
+    end
+    hold(ax, "off")
+    xlim(ax, [-0.5 Nt-0.5]), ylim(ax, [0 pi]), box(ax, "on")
+    set(ax, "XTick", 0:8:Nt, "YTick", [0 pi/8 pi/4 pi/2 pi], ...
+        "YTickLabel", ["$0$", "$\frac{\pi}{8}$", "$\frac{\pi}{4}$", "$\frac{\pi}{2}$", "$\pi$"], ...
+        "TickLabelInterpreter","latex", "FontSize", 8, "Layer","top")
+    xlabel(ax, "位置 {\itn}", "Interpreter","tex", "FontSize", 9)
+    ylabel(ax, "$\omega$", "Interpreter","latex", "FontSize", 10, "Rotation", 0)
+    text(ax, Nt+4.2, pi/2, "ストライド", "FontSize", 7, "Rotation", 90, "HorizontalAlignment","center")
+    names = ["vie-10-tiling-dct.png", "vie-10-tiling-dwt.png"];
+    exportgraphics(fig, fullfile(resfolder, names(panel)), "Resolution", 300)
+    close(fig)
+end
+%%
 %[text] ## 9/7 DWT の基底画像
 %[text] 各サブバンドの中央の係数だけを 1 にして逆変換すると，そのサブバンドの基底画像が得られる。サイズが周波数に応じて異なり，互いに重なり合う。
 Nb = 64;
