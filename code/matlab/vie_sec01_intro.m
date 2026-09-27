@@ -15,15 +15,15 @@ cwarm = [197 90 17]/255;    % 暖色系（橙）#C55A11：注目させたい箇�
 cgray = [0.6 0.6 0.6];      % 補助線（灰）
 %%
 %[text] ## 音声信号：一変量の関数とその標本化
-%[text] 音叉の音のように，音声信号（モノラル）は時刻 $ t $ の**一変量の関数** $ x(t) $ とみなせる。ここでは 1 秒間に 440 回振動する音（ラの音）を，少しずつ減衰する正弦波で模擬する。
-%[text]{"align":"center"} $ x(t) = \\mathrm{e}^{-t/\\tau}\\sin(2\\pi f\_0 t),\\quad f\_0 = 440\\ \\mathrm{Hz} $
-%[text] これを標本化周波数 $ f\_\\mathrm{s} $ で標本化すると，**数列（サンプル列）** $ x[n] = x(n/f\_\\mathrm{s}) $ が得られる。
+%[text] 音叉の音のように，音声信号（モノラル）は時刻 $ t $ の**一変量の関数** $ u(t) $ とみなせる（参考資料 1.4.1 項の記法）。ここでは 1 秒間に 440 回振動する音（ラの音）を，少しずつ減衰する正弦波で模擬する。
+%[text]{"align":"center"} $ u(t) = \\mathrm{e}^{-t/\\tau}\\sin(2\\pi f\_0 t),\\quad f\_0 = 440\\ \\mathrm{Hz} $
+%[text] これを標本化周波数 $ f\_\\mathrm{s} $（標本化間隔 $ \\Delta\_\\mathrm{t}=1/f\_\\mathrm{s} $）で標本化すると，**数列（サンプル列）** $ x[n] = u(\\Delta\_\\mathrm{t}n) $ が得られる。
 f0  = 440;          % 音の高さ [Hz]
 tau = 0.4;          % 減衰の時定数 [s]
 fs  = 8000;         % 標本化周波数 [Hz]
 n   = 0:fs-1;       % 1 秒分の標本番号
 xn  = exp(-n/fs/tau).*sin(2*pi*f0*n/fs);
-%[text] 冒頭の 5 ms だけを拡大すると，連続な波形 $ x(t) $（灰色）の上に標本 $ x[n] $（緑）が等間隔に並んでいるのが分かる。右は周波数成分の時間変化（スペクトログラム）で，440 Hz に成分が集中している。「どのような成分から構成されているか」を調べるのがフーリエ解析（第7回）である。
+%[text] 冒頭の 5 ms だけを拡大すると，連続な波形 $ u(t) $（灰色）の上に標本 $ x[n] $（緑）が等間隔に並んでいるのが分かる。右は周波数成分の時間変化（スペクトログラム）で，440 Hz に成分が集中している。「どのような成分から構成されているか」を調べるのがフーリエ解析（第7回）である。
 %[text] 講義で使ったデモ（録音した声のスペクトログラムを表示する `analysisdemo`）と同じ見せ方を，録音の代わりに模擬音で再現している。
 tiledlayout(1,2,"TileSpacing","compact","Padding","compact")
 nexttile
@@ -32,7 +32,7 @@ plot(tc*1e3, exp(-tc/tau).*sin(2*pi*f0*tc), "Color",cgray, "LineWidth",1), hold 
 ns = 0:round(5e-3*fs);
 stem(ns/fs*1e3, xn(ns+1), "filled", "MarkerSize",3, "Color",cmain), hold off
 xlabel("時刻 \itt\rm [ms]"), ylabel("振幅")
-title("\itx\rm(\itt\rm) と標本 \itx\rm[\itn\rm]")
+title("\itu\rm(\itt\rm) と標本 \itx\rm[\itn\rm]")
 grid on
 nexttile
 spectrogram(xn, hann(256), 192, 512, fs, "yaxis")
