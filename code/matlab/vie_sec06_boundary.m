@@ -45,10 +45,14 @@ Simp(~Mimp) = "\phantom{" + Sy(~Mimp) + "}";              % 幅は出力 y と�
 vie.savetex("vie-06-conv2-y-imp00", strjoin(join(Simp, " & ", 2), "\\" + newline));
 M00x = false(size(X2)); M00x(1,1) = true;          % x[0,0]
 vie.savetex("vie-06-conv2-x-hl00",  arr2texshow(X2, true(size(X2)), "%d", M00x));
+%[text] 相互相関の例では，カーネルの中心を入力の中央の画素 $ x[1,1] $ に合わせる。両方の中心を強調した版も書き出す。
+Mcx = false(size(X2)); Mcx(2,2) = true;
+vie.savetex("vie-06-conv2-x-hlc",   arr2texshow(X2, true(size(X2)), "%d", Mcx));
 %[text] 各軸を反転したインパルス応答（フィルタカーネル） $ f[\\boldsymbol{n}]=h[-\\boldsymbol{n}] $ との相互相関としても同じ結果になる（ `filter2` は相関を計算する）。
 W2 = rot90(H2, 2)                                   % 各軸を反転
 isequal(filter2(W2, X2, "full"), Y2)
 vie.savetex("vie-06-conv2-w", vie.arr2tex(W2,"%d"));
+vie.savetex("vie-06-conv2-w-hlc",   arr2texshow(W2, true(size(W2)), "%d", Mcx));
 %[text] 出力の中央 $ y[1,1] $ （ $ \\mathsf{x} $ の中央の画素に対応）は，反転カーネルを重ねた積和。行の順に項を並べた式もスライド用に書き出す。
 yc = sum(W2 .* X2, "all")
 terms = strings(1, numel(X2));
