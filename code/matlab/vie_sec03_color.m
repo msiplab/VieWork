@@ -6,11 +6,11 @@
 %[text:tableOfContents]{"heading":"目次"}
 %%
 %[text] ## 準備
-%[text] Kodak Lossless True Color Image Suite の画像を `data` フォルダに取得する（取得済みなら何もしない）。この回では主に kodim03（帽子）を使う。
-[datfolder,resfolder] = vie.prjfolders();
-vie.download_img(false)
-Xrgb = im2double(imread(fullfile(datfolder,"kodim03.png")));
-Xrgb = imresize(Xrgb, 0.5);                   % 256×384 画素に縮小（スライド用）
+%[text] 写真は教科書（参考資料）のサンプル画像 msipimg02（花束，512×512 画素）を使う。色とりどりの花が写っていて，RGB の各成分，HSV の各成分，減色の効果がはっきり見える。スライドの図の配置に合わせて，中央付近の $ 342\\times 512 $ 画素（行 140〜481）を切り出して横長にし， $ 256\\times 384 $ 画素に縮小する。
+[~,resfolder] = vie.prjfolders();
+Xrgb = im2double(vie.msipimg(2));             % 花束（RGB，512×512）
+Xrgb = Xrgb(140:481,:,:);                     % 横長（縦:横 = 2:3）に切り出す
+Xrgb = imresize(Xrgb, [256 384]);             % 256×384 画素に縮小（スライド用）
 [N1,N2,~] = size(Xrgb)
 %[text] 図の線や点の色は，スライドのロゴの 3 色（メインの緑，青，橙）にそろえる。色そのものが内容の図（成分画像，色空間の図）は除く。
 cMain = [0 136 85]/255;                       % メイン（緑）#008855
