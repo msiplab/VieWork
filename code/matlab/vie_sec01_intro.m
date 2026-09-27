@@ -44,15 +44,16 @@ exportgraphics(gcf, fullfile(resfolder,"vie-01-audio.png"), "Resolution",200)
 %%
 %[text] ## 画像信号：多変量の関数とその標本化
 %[text] 画像信号（モノクロ）は位置 $ (q\_\\mathrm{v},q\_\\mathrm{h}) $ の**多変量の関数** $ u(q\_\\mathrm{v},q\_\\mathrm{h}) $ とみなせる。標本化すると**配列（画素配列）** $ x[n\_\\mathrm{v},n\_\\mathrm{h}] $ が得られる。
-X = imread("cameraman.tif");      % Image Processing Toolbox 付属の 8 bit グレースケール画像
+%[text] 画像は参考資料のサンプル画像 msipimg05（石像の顔，512×512 のカラー）を 256×256 に縮小し，グレースケールにしたものを使う。
+X = vie.msipimg(5, 256, "gray");  % 8 bit グレースケール画像（uint8）
 sz = size(X)
 %[text] 一配列要素あたりのビット数 $ \\beta $ は，変数の占めるバイト数（`whos`）を要素数で割れば分かる（講義のデモ `dataamount` と同じ確かめ方）。
 whosX  = whos("X");
 bitsX = 8*whosX.bytes/numel(X)     % 8 bits（uint8 型）
 vie.savetex("vie-01-image-size", sprintf("$%d\\times%d$", sz(1), sz(2)));
 vie.savetex("vie-01-image-bits", sprintf("%d", bitsX));
-%[text] 画像の一部（顔のあたり）を切り出して数値を見る。画像は数の並びにすぎない。MATLAB の添字は 1 から始まるが，教科書の配列 $ x[n\_\\mathrm{v},n\_\\mathrm{h}] $ の添字は 0 から始まるので，位置は 1 を引いて示す。
-r0 = 60; c0 = 110; w = 5;         % 切り出す位置（MATLAB の添字）と大きさ
+%[text] 画像の一部（左上の空と石像の境目）を切り出して数値を見る。明るい空（200 台）から暗い石（100 前後以下）へ，値が斜めに切り替わる様子が数値で分かる。画像は数の並びにすぎない。MATLAB の添字は 1 から始まるが，教科書の配列 $ x[n\_\\mathrm{v},n\_\\mathrm{h}] $ の添字は 0 から始まるので，位置は 1 を引いて示す。
+r0 = 50; c0 = 27; w = 5;          % 切り出す位置（MATLAB の添字）と大きさ
 blk = X(r0:r0+w-1, c0:c0+w-1)
 vie.savetex("vie-01-pixels", "\begin{bmatrix}" + vie.arr2tex(double(blk),"%d") + "\end{bmatrix}");
 vie.savetex("vie-01-pixels-pos", sprintf("n_\\mathrm{v}=%d\\sim%d,\\ n_\\mathrm{h}=%d\\sim%d", r0-1, r0+w-2, c0-1, c0+w-2));
@@ -136,7 +137,8 @@ y  = conv(x, h0) + conv(x, h1)
 %%
 %[text] ## 画像変換の効果：3 レベルウェーブレット変換
 %[text] 画像にも同じ考え方（近似と詳細への分解）を縦横に繰り返し適用できる。ここではハールウェーブレットで 3 レベル分解する。
-Xd = im2double(X);
+%[text] 画像は参考資料のサンプル画像 msipimg08（スイカ）を 256×256 のグレースケールにしたものを使う。縞模様の輪郭にだけ大きな係数が残り，それ以外はほぼ零になる様子がよく見える（石像の顔 msipimg05 などと比べて選んだ）。
+Xd = im2double(vie.msipimg(8, 256, "gray"));
 [C,S] = wavedec2(Xd, 3, "haar");
 %[text] 変換前の画素値は 0 から 1 まで広く分布する**デンス（密）**な表現だが，変換後の係数は**ほとんどが零に近い**。
 thr  = 0.05;                                   % 「ほぼ零」とみなすしきい値
@@ -180,8 +182,8 @@ vie.savetex("vie-01-still-grayMB",sprintf("%.0f", Bgray/8/1e6));
 vie.savetex("vie-01-still-rgb",   vie.fmtint(Brgb));
 vie.savetex("vie-01-still-rgbMB", sprintf("%.0f", Brgb/8/1e6));
 vie.savetex("vie-01-still-ratio", sprintf("%d", ratio));
-%[text] 実際の画像データでも確かめる。講義のデモ `dataamount` と同じく，画像を読み込んで `whos` でバイト数を見る。`peppers.png` は 8-bit の RGB カラー画像で，倍精度実数型に変換すると 8 倍のバイト数になる。
-P  = imread("peppers.png");          % uint8 の RGB カラー画像
+%[text] 実際の画像データでも確かめる。講義のデモ `dataamount` と同じく，画像を読み込んで `whos` でバイト数を見る。参考資料のサンプル画像 msipimg02（花束，512×512）は 8-bit の RGB カラー画像で，倍精度実数型に変換すると 8 倍のバイト数になる。
+P  = vie.msipimg(2);                 % uint8 の RGB カラー画像（512×512×3）
 Pd = im2double(P);                   % 倍精度実数型に変換
 szp = size(P)
 whosP  = whos("P");  whosPd = whos("Pd");
