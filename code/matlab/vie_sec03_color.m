@@ -272,11 +272,11 @@ vie.savetex("vie-03-R-422", sprintf("%.0f",Rfmt(2)/1e6));
 vie.savetex("vie-03-R-420", sprintf("%.0f",Rfmt(3)/1e6));
 %%
 %[text] ## CMY 空間
-%[text] 各成分を 0〜1 に正規化すると，CMY は RGB の補色： $ (y\_\\mathrm{C},y\_\\mathrm{M},y\_\\mathrm{Y}) = (1-x\_\\mathrm{R},1-x\_\\mathrm{G},1-x\_\\mathrm{B}) $ 。オレンジ色の画素で確かめる。
+%[text] 各成分を 0〜1 に正規化すると，CMY は RGB の補色： $ \\vec{y} = \\vec{1}-\\vec{x} $ （教科書の例題「CMY空間」）。オレンジ色の画素 $ \\vec{x}=(1\\ 0.5\\ 0)^\\top $ で確かめる。成分は教科書の記法（転置した行ベクトル）に合わせて \\quad 区切りで書き出す。
 xo = [1 0.5 0];
 ycmy = 1 - xo
-vie.savetex("vie-03-cmy-x", strjoin(compose("%g",xo),",\ "));
-vie.savetex("vie-03-cmy-y", strjoin(compose("%g",ycmy),",\ "));
+vie.savetex("vie-03-cmy-x", strjoin(compose("%g",xo),"\quad "));
+vie.savetex("vie-03-cmy-y", strjoin(compose("%g",ycmy),"\quad "));
 %%
 %[text] ## CMYK 空間
 %[text] まず RGB の補色 $ (1-x\_\\mathrm{R},1-x\_\\mathrm{G},1-x\_\\mathrm{B}) $ の最小値として $ y\_\\mathrm{K} $ を求め，K で補正した CMY を $ \\vec{1} - \\vec{x}/(1-y\_\\mathrm{K}) $ で求める。途中の値（補色と $ 1-y\_\\mathrm{K} $ ）もスライドに書き出す。
@@ -285,11 +285,11 @@ xkc = 1 - xk                                  % RGB の補色
 yK = min(xkc)
 yCMY = 1 - xk/(1 - yK)
 xback = (1 - yK)*(1 - yCMY)                   % 逆変換（教科書の例題の解答）で元に戻る
-vie.savetex("vie-03-cmyk-x",   strjoin(compose("%.1f",xk),",\ "));
+vie.savetex("vie-03-cmyk-x",   strjoin(compose("%.1f",xk),"\quad "));
 vie.savetex("vie-03-cmyk-1mx", strjoin(compose("%.1f",xkc),",\ "));
 vie.savetex("vie-03-cmyk-K",   sprintf("%.1f",yK));
 vie.savetex("vie-03-cmyk-1mK", sprintf("%.1f",1-yK));
-vie.savetex("vie-03-cmyk-cmy", strjoin(compose("%.3f",yCMY),",\ "));
+vie.savetex("vie-03-cmyk-cmy", strjoin(compose("%.3f",yCMY),"\quad "));
 %%
 %[text] ## HS 系：色相環
 %[text] 色相（H）を角度，彩度（S）を中心からの距離で表す。赤 0°，緑 120°，青 240°。明度 V=1 の断面を描く。
