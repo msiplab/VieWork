@@ -312,7 +312,7 @@ set(gca,"FontSize",8), view(-35,30), zticks(0:0.5:1)
 exportgraphics(gcf, fullfile(resfolder,"vie-05-impulse2d.png"), "Resolution", 300)
 %%
 %[text] ## 畳み込みの数値例
-%[text] 一次元の入力 $ x[n]=(1,2,3,2) $ とインパルス応答 $ h[n]=(1,2,1) $ の畳み込み $ y[n]=\\sum\_k x[k]h[n-k] $ 。入力をインパルスの重み付け和とみなし，各インパルスの応答を足し合わせる。
+%[text] 一次元の入力 $ (x[n])\_n=(1\\ 2\\ 3\\ 2)^\\top\\in\\mathbb{R}^{\\{0,1,2,3\\}} $ とインパルス応答 $ (h[n])\_n=(1\\ 2\\ 1)^\\top\\in\\mathbb{R}^{\\{0,1,2\\}} $ の畳み込み $ y[n]=\\sum\_{m} x[m]h[n-m] $ （教科書 定理 4.1 の記法）。入力をインパルスの重み付け和とみなし，各インパルスの応答を足し合わせる。
 xc = [1 2 3 2]; hc = [1 2 1];
 yc = conv(xc, hc)
 parts = zeros(numel(xc), numel(yc));
@@ -321,8 +321,8 @@ for k = 1:numel(xc)
 end
 parts
 assert(isequal(sum(parts,1), yc))
-vie.savetex("vie-05-conv-x", strjoin(string(xc),","));
-vie.savetex("vie-05-conv-h", strjoin(string(hc),","));
+vie.savetex("vie-05-conv-x", strjoin(string(xc)," & "));   % 列ベクトルの転置として smallmatrix に入れる
+vie.savetex("vie-05-conv-h", strjoin(string(hc)," & "));
 vie.savetex("vie-05-conv-y", strjoin(string(yc),",\ "));
 vie.savetex("vie-05-conv-parts", vie.arr2tex(parts,"%d"));
 %[text] スライドの表（行： $ x[k]h[n-k] $ ，列： $ n $ ）の本体を書き出す。インパルス応答の台の外は空欄にする。最後の行には `\\` を付けない（スライド側で付ける）。
