@@ -17,8 +17,9 @@ A = [1 1; -1 1]/sqrt(2)
 B = inv(A)                                     % = A'（直交行列）
 %%
 %[text] ## 自然画像の隣接画素の散布図
-%[text] cameraman.tif の水平方向の隣接画素ペア $ \\mathbf{x}^{[i]}=(x\_0\\ x\_1)^\\top $ （重ならないように 2 画素ずつ）を散布図にする。添え字は第09回全体で 0 始まりに揃える（教科書の図 6.1 は 1 始まり）。ほぼ対角線上に並ぶ：隣どうしは似た値をとる（相関が強い）。
-X = im2double(imread("cameraman.tif"));
+%[text] 画像は教科書のサンプル画像 msipimg04.tif（石造りの建物）を $ 256\\times256 $ 画素のグレースケールに縮小して使う（共通関数 `vie.msipimg` ）。暗い空などの平坦な領域と石の細かな模様を含み，相関の強さと変換によるスパース化がはっきり見える（石像の顔 msipimg05 やモンブラン msipimg07 と比べて選んだ）。
+%[text] この画像の水平方向の隣接画素ペア $ \\mathbf{x}^{[i]}=(x\_0\\ x\_1)^\\top $ （重ならないように 2 画素ずつ）を散布図にする。添え字は第09回全体で 0 始まりに揃える（教科書の図 6.1 は 1 始まり）。ほぼ対角線上に並ぶ：隣どうしは似た値をとる（相関が強い）。
+X = im2double(vie.msipimg(4, 256, "gray"));     % 石造りの建物（256×256）
 x1 = X(:,1:2:end); x2 = X(:,2:2:end);
 P = [x1(:) x2(:)]';                            % 2×S の画素ペア
 S = size(P,2)
@@ -54,8 +55,8 @@ ratio = mean(abs(Q(2,:)) < 0.02)
 vie.savetex("vie-09-sparse-y", sprintf("%.0f", 100*ratio));
 %%
 %[text] ### 教科書の例「分散共分散行列」を再現する
-%[text] 教科書の図 6.1 は，図 1.2 (a) の画像（MsipWorkM の msipimg01.tif を $ 96\\times96 $ 画素に縮小したもの）の水平隣接画素ペアから作られている。同じ手順で計算し，教科書の $ \\hat{\\boldsymbol{\\Sigma}}\_\\mathcal{X} $ ， $ \\hat{\\boldsymbol{\\Sigma}}\_\\mathcal{Y} $ と一致することを確かめる。画像は VieWork の data フォルダ，隣に置いた MsipWorkM の data フォルダ，GitHub の順に探す（末尾のローカル関数 `msipimgfile` ）。
-I96 = imresize(im2double(rgb2gray(imread(msipimgfile("msipimg01.tif")))), [96 96], "bilinear");
+%[text] 教科書の図 6.1 は，図 1.2 (a) の画像（MsipWorkM の msipimg01.tif を $ 96\\times96 $ 画素に縮小したもの）の水平隣接画素ペアから作られている。同じ手順で計算し，教科書の $ \\hat{\\boldsymbol{\\Sigma}}\_\\mathcal{X} $ ， $ \\hat{\\boldsymbol{\\Sigma}}\_\\mathcal{Y} $ と一致することを確かめる。画像は共通関数 `vie.msipimg` で読み込む。
+I96 = imresize(im2double(vie.msipimg(1, [], "gray")), [96 96], "bilinear");
 Xp = reshape(I96.', 2, []).';                  % S×2：各行が水平隣接画素ペア (x_0, x_1)
 exSx = cov(Xp, 1)
 exSy = cov(Xp*Aex.', 1)
@@ -306,17 +307,6 @@ else
     Hp = dhtmtx(J-1);
     H = [kron(Hp, [1 1]); kron(eye(2^(J-1)), [1 -1])]/sqrt(2);
 end
-end
-
-function imgfile = msipimgfile(fname)
-% 教科書のサンプル画像（MsipWorkM の data フォルダ）の場所を返す。
-% VieWork の data フォルダ → 隣に置いた MsipWorkM の data フォルダ → GitHub から取得，の順に探す。
-[datfolder,~,prjroot] = vie.prjfolders();
-imgfile = fullfile(datfolder, fname);
-if isfile(imgfile), return, end
-sibling = fullfile(fileparts(prjroot), "MsipWorkM", "data", fname);
-if isfile(sibling), imgfile = sibling; return, end
-websave(imgfile, "https://raw.githubusercontent.com/msiplab/MsipWorkM/master/data/" + fname);
 end
 
 %[appendix]{"version":"1.0"}
