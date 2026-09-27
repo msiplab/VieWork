@@ -120,11 +120,14 @@ for panel = 1:2
             g = bands97{b}(:); c = round((Nt-numel(g))/2); n0 = [c c+st(b)];
         end
         g = g/max(abs(g));
+        if panel == 2 && max(g) < 1, g = -g; end     % MATLAB の合成高域フィルタは中央が負．ψ と同じ向き（中央が正）にそろえる
         if all(abs(g - g(1)) < 1e-12), g = 0.4*g; end   % 直流の基底は帯域の中ほどに描く
         cols = {cA, cB};
         for k = 1:2
             nn = n0(k) + (0:numel(g)-1);
-            plot(ax, nn, yc + amp*g, "-", "Color", cols{k}, "LineWidth", 1.1)
+            keep = nn >= 0 & nn <= Nt-1;             % 表示範囲の標本だけ
+            plot(ax, nn(keep), yc + amp*g(keep), "-", "Color", cols{k}, "LineWidth", 0.8)
+            plot(ax, nn(keep), yc + amp*g(keep), ".", "Color", cols{k}, "MarkerSize", 6)   % 標本点
         end
         text(ax, Nt+0.3, yc, sprintf("%d", st(b)), "FontSize", 7, "HorizontalAlignment","left")
     end
