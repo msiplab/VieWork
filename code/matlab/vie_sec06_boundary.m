@@ -27,6 +27,24 @@ vie.savetex("vie-06-conv2-y", vie.arr2tex(Y2,"%d"));
 %[text] 左上の出力 $ y[-1,-1]=x[0,0]\\,h[-1,-1] $ は 1 項だけの積：
 y00 = Y2(1,1)
 vie.savetex("vie-06-conv2-y00", sprintf("%d", y00));
+%[text] スライドでは出力を段階的に見せる（空欄 → 例の 1 要素だけ → 全体）。空欄は `\phantom` で幅を保ち，例の要素は暖色で強調する。
+M00 = false(size(Y2)); M00(1,1) = true;             % y[-1,-1]（左上）
+Mc  = false(size(Y2)); Mc(3,3)  = true;             % y[1,1]（中央）
+vie.savetex("vie-06-conv2-y-blank", arr2texshow(Y2, false(size(Y2)), "%d"));
+vie.savetex("vie-06-conv2-y-ex00",  arr2texshow(Y2, M00, "%d"));
+vie.savetex("vie-06-conv2-y-hl00",  arr2texshow(Y2, true(size(Y2)), "%d", M00));
+vie.savetex("vie-06-conv2-y-exc",   arr2texshow(Y2, Mc, "%d"));
+vie.savetex("vie-06-conv2-y-hlc",   arr2texshow(Y2, true(size(Y2)), "%d", Mc));
+%[text] インパルス応答の重み付け和の一例として， $ x[0,0] $ 倍したインパルス応答を位置 $ [0\ 0]^\top $ にずらしたもの（出力の左上 $ 3\times3 $ ）だけを出力の枠に書く。
+Cimp = zeros(size(Y2)); Cimp(1:3,1:3) = X2(1,1)*H2;  % x[0,0] h[n - [0 0]^T]
+Mimp = false(size(Y2)); Mimp(1:3,1:3) = true;
+Simp = string(arrayfun(@(v) sprintf("%d", v), Cimp, "UniformOutput", false));
+Simp(Mimp) = "\alert{" + Simp(Mimp) + "}";
+Sy = string(arrayfun(@(v) sprintf("%d", v), Y2, "UniformOutput", false));
+Simp(~Mimp) = "\phantom{" + Sy(~Mimp) + "}";              % 幅は出力 y と同じにする
+vie.savetex("vie-06-conv2-y-imp00", strjoin(join(Simp, " & ", 2), "\\" + newline));
+M00x = false(size(X2)); M00x(1,1) = true;          % x[0,0]
+vie.savetex("vie-06-conv2-x-hl00",  arr2texshow(X2, true(size(X2)), "%d", M00x));
 %[text] 各軸を反転したインパルス応答（フィルタカーネル） $ f[\\boldsymbol{n}]=h[-\\boldsymbol{n}] $ との相互相関としても同じ結果になる（ `filter2` は相関を計算する）。
 W2 = rot90(H2, 2)                                   % 各軸を反転
 isequal(filter2(W2, X2, "full"), Y2)
@@ -438,6 +456,20 @@ function s = arr2texmark(X, mask, fmt)
 % vie.arr2tex と同じ形式で，mask が true の要素を太字（\positive{\mathbf{...}}）にする
 C = string(arrayfun(@(v) sprintf(fmt, v), X, "UniformOutput", false));
 C(mask) = "\positive{\mathbf{" + C(mask) + "}}";
+rows = strings(size(X,1), 1);
+for i = 1:size(X,1)
+    rows(i) = strjoin(C(i,:), " & ");
+end
+s = strjoin(rows, "\\" + newline);
+end
+
+function s = arr2texshow(X, show, fmt, hl)
+% vie.arr2tex と同じ形式で，show が false の要素を \phantom（幅だけ残す空欄）にし，
+% hl が true の要素（省略時は show の要素）を暖色（\alert）で強調する
+if nargin < 4, hl = show & ~all(show(:)); end
+C = string(arrayfun(@(v) sprintf(fmt, v), X, "UniformOutput", false));
+C(hl & show) = "\alert{" + C(hl & show) + "}";
+C(~show) = "\phantom{" + C(~show) + "}";
 rows = strings(size(X,1), 1);
 for i = 1:size(X,1)
     rows(i) = strjoin(C(i,:), " & ");
