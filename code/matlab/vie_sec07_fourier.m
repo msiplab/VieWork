@@ -21,12 +21,14 @@ nu = 2*pi*3
 T1 = 2*pi/nu
 vie.savetex("vie-07-nu1d", pistr(nu));        % 6\pi
 vie.savetex("vie-07-T1d", fracstr(T1));       % 1/3
-clf
-plot(t, cos(nu*t), "Color", cMain, "LineWidth", 2), grid on
-xlabel("$t$", "Interpreter","latex"), ylabel("$x(t)$", "Interpreter","latex")
-title("{\itx}({\itt}) = cos(6\pi{\itt})（単位時間に 3 周期）")
-set(gca, "FontSize", 13)
-exportgraphics(gca, fullfile(resfolder,"vie-07-cos1d.png"), "Resolution", 120, "Padding", 10)
+fig = figure(Units="centimeters", Position=[2 2 8 5.5], Color="w");   % スライドにほぼ原寸で載せる
+ax = axes(fig);
+plot(ax, t, cos(nu*t), "Color", cMain, "LineWidth", 2.4), grid(ax, "on"), ylim(ax, [-1.2 1.2])
+xlabel(ax, "$t$", "Interpreter","latex"), ylabel(ax, "$x(t)$", "Interpreter","latex")
+title(ax, "{\itx}({\itt}) = cos(6\pi{\itt})（単位時間に 3 周期）", "FontWeight","normal", "FontSize", 10)
+set(ax, "FontSize", 11)
+exportgraphics(fig, fullfile(resfolder,"vie-07-cos1d.png"), "Resolution", 300)
+close(fig)
 %%
 %[text] ## 信号は正弦波の足し合わせ
 %[text] 3 つの余弦波（1, 3, 7 周期／単位時間，振幅 1, 0.5, 0.25）の和と，その振幅スペクトル（周波数分布）。
@@ -136,19 +138,22 @@ Xw = 2 + 2*exp(-1j*w);
 X2 = fft([2 2])                               % N = 2
 X8 = fft([2 2], 8);                           % N = 8（零値を追加）
 k8 = 0:7;
-clf
-plot(w, real(Xw), "Color", cCool, "LineWidth", 1.5), hold on
-plot(w, imag(Xw), "Color", cWarm, "LineWidth", 1.5)
-plot(2*pi*k8/8, real(X8), "o", "Color", cCool, "MarkerSize", 7, "LineWidth", 1.5)
-plot(2*pi*k8/8, imag(X8), "o", "Color", cWarm, "MarkerSize", 7, "LineWidth", 1.5)
-plot(2*pi*(0:1)/2, real(X2), "s", "Color", cMain, "MarkerSize", 13, "LineWidth", 2.5)
-hold off, grid on, xlim([0 2*pi]), ylim([-2.6 5.4])
-xticks(0:pi/2:2*pi), xticklabels(["0","\pi/2","\pi","3\pi/2","2\pi"])
-legend(["$\mathrm{Re}\,X(\mathrm{e}^{\mathrm{j}\omega})$","$\mathrm{Im}\,X(\mathrm{e}^{\mathrm{j}\omega})$", ...
+fig = figure(Units="centimeters", Position=[2 2 8 7.6], Color="w");   % スライドにほぼ原寸で載せる
+ax = axes(fig);
+plot(ax, w, real(Xw), "Color", cCool, "LineWidth", 2.2), hold(ax, "on")
+plot(ax, w, imag(Xw), "Color", cWarm, "LineWidth", 2.2)
+plot(ax, 2*pi*k8/8, real(X8), "o", "Color", cCool, "MarkerSize", 6, "LineWidth", 1.8)
+plot(ax, 2*pi*k8/8, imag(X8), "o", "Color", cWarm, "MarkerSize", 6, "LineWidth", 1.8)
+plot(ax, 2*pi*(0:1)/2, real(X2), "s", "Color", cMain, "MarkerSize", 11, "LineWidth", 2.5)
+hold(ax, "off"), grid(ax, "on"), xlim(ax, [0 2*pi]), ylim(ax, [-2.6 4.8])
+xticks(ax, 0:pi/2:2*pi), xticklabels(ax, ["0","\pi/2","\pi","3\pi/2","2\pi"]), yticks(ax, -2:2:4)
+lgd = legend(ax, ["$\mathrm{Re}\,X(\mathrm{e}^{\mathrm{j}\omega})$","$\mathrm{Im}\,X(\mathrm{e}^{\mathrm{j}\omega})$", ...
         "$\mathrm{Re}\,X[k]\ (N=8)$","$\mathrm{Im}\,X[k]\ (N=8)$","$X[k]\ (N=2)$"], ...
-       "Interpreter","latex", "Location","north", "NumColumns",2, "FontSize",11)
-xlabel("$\omega$", "Interpreter","latex"), set(gca, "FontSize", 12)
-exportgraphics(gca, fullfile(resfolder,"vie-07-dftsample.png"), "Resolution", 120, "Padding", 10)
+       "Interpreter","latex", "Location","southoutside", "NumColumns",2, "FontSize",8);   % 凡例は下の外
+lgd.ItemTokenSize = [15 10];
+xlabel(ax, "$\omega$", "Interpreter","latex"), set(ax, "FontSize", 11)
+exportgraphics(fig, fullfile(resfolder,"vie-07-dftsample.png"), "Resolution", 300)
+close(fig)
 vie.savetex("vie-07-X2", strjoin(compose("%g",real(X2)),",\ "));
 %[text] 教科書の例「一次元 DFT の行列表現」。回転子 $ W\_N=\\mathrm{e}^{-\\mathrm{j}2\\pi/N} $ を並べた $ \\mathbf{W}\_N=(W\_N^{kn}) $ により $ \\tilde{\\mathbf{x}}=\\mathbf{W}\_N\\mathbf{x} $ 。IDFT は $ \\mathbf{W}\_N^{-1}=\\mathbf{W}\_N^{\\mathsf{H}}/N $ 。 $ N=2 $ で確かめる。
 Nd = 2;
@@ -243,7 +248,7 @@ vie.savetex("vie-07-Hpi", sprintf("%.3f", Hpp));
 vie.savetex("vie-07-Hpi-frac", fracstr(Hpp));
 vie.savetex("vie-07-Hzero", pistr(wz));
 %[text] 4 種類のカーネルの振幅応答 $ |H(\\mathrm{e}^{\\mathrm{j}\\boldsymbol{\\omega}^\\top})| $ を DSFT の定義に従って計算する。カーネルの行の添え字が $ n\_1 $ （垂直），列の添え字が $ n\_2 $ （水平）で，中心が原点。
-[W2, W1] = meshgrid(linspace(-pi, pi, 61));    % 横軸 ω2，縦軸 ω1
+[W2, W1] = meshgrid(linspace(-pi, pi, 25));    % 横軸 ω2，縦軸 ω1（網目は粗めにして線を見やすく）
 kers = {ones(3)/9, [1 2 1; 2 4 2; 1 2 1]/16, [0 1 0; 1 -4 1; 0 1 0], [0 -1 0; -1 5 -1; 0 -1 0]};
 tags = ["box","gauss","lap","us"];
 ttl  = ["平均（矩形）","加重平均","4 近傍ラプラシアン","アンシャープマスク"];
@@ -255,13 +260,16 @@ for k = 1:4
         H = H + kers{k}(i)*exp(-1j*(W1*m1(i) + W2*m2(i)));
     end
     Hmag{k} = abs(H);
-    clf
-    mesh(W2, W1, Hmag{k}), axis tight, view(-35, 30), colormap(gca, cmapMain)
-    xlabel("$\omega_2$", "Interpreter","latex"), ylabel("$\omega_1$", "Interpreter","latex")
-    zlabel("$|H(\mathrm{e}^{\mathrm{j}{\bf\omega}^\top})|$", "Interpreter","latex"), title(ttl(k))
-    xticks([-pi 0 pi]), xticklabels(["-\pi","0","\pi"]), yticks([-pi 0 pi]), yticklabels(["-\pi","0","\pi"])
-    set(gca, "FontSize", 13)
-    exportgraphics(gca, fullfile(resfolder,"vie-07-freq-"+tags(k)+".png"), "Resolution", 110, "Padding", 10)
+    fig = figure(Units="centimeters", Position=[2 2 6.5 5.5], Color="w");   % スライドにほぼ原寸で載せる
+    ax = axes(fig);
+    mesh(ax, W2, W1, Hmag{k}, "LineWidth", 1.0), axis(ax, "tight"), view(ax, -35, 30), colormap(ax, cmapMain)
+    xlabel(ax, "$\omega_2$", "Interpreter","latex"), ylabel(ax, "$\omega_1$", "Interpreter","latex")
+    zlabel(ax, "$|H(\mathrm{e}^{\mathrm{j}\mbox{\boldmath$\omega$}^\top})|$", "Interpreter","latex")
+    title(ax, ttl(k), "FontWeight","normal", "FontSize", 10)
+    xticks(ax, [-pi 0 pi]), xticklabels(ax, ["-\pi","0","\pi"]), yticks(ax, [-pi 0 pi]), yticklabels(ax, ["-\pi","0","\pi"])
+    set(ax, "FontSize", 9)
+    exportgraphics(fig, fullfile(resfolder,"vie-07-freq-"+tags(k)+".png"), "Resolution", 300)
+    close(fig)
 end
 errBox = max(abs(Hmag{1} - abs(Hsep(W1,W2))), [], "all")   % 矩形フィルタは閉じた形と一致
 usRange = [min(Hmag{4}(:)) max(Hmag{4}(:))]   % アンシャープマスクの |H| の範囲
@@ -276,23 +284,30 @@ xin = env.*(sin(0.25*pi*n) + sin(0.6*pi*n));
 ylin = [zeros(1,5) xin(1:end-5)];              % 直線位相（遅延）
 a = 0.8;
 ynl = filter([-a 1], [1 -a], xin);             % 全域通過（|H|=1，非直線位相）
-tiledlayout(3,1,"TileSpacing","compact","Padding","compact")
-nexttile, plot(n, xin, "k", "LineWidth", 1.5), title("入力"), axis tight, set(gca, "FontSize", 12)
-nexttile, plot(n, ylin, "Color", cMain, "LineWidth", 1.5), title("直線位相の出力（同じ形）"), axis tight, set(gca, "FontSize", 12)
-nexttile, plot(n, ynl, "Color", cWarm, "LineWidth", 1.5), title("非直線位相の出力（ひずむ）"), axis tight, set(gca, "FontSize", 12)
-xlabel("$n$", "Interpreter","latex")
-exportgraphics(gcf, fullfile(resfolder,"vie-07-phase-demo.png"), "Resolution", 120, "Padding", 10)
+fig = figure(Units="centimeters", Position=[2 2 8.5 7], Color="w");   % スライドにほぼ原寸で載せる
+tl = tiledlayout(fig, 3, 1, "TileSpacing","compact", "Padding","compact");
+ys = {xin, ylin, ynl}; cs = {[0 0 0], cMain, cWarm};
+ts = ["入力", "直線位相の出力（同じ形）", "非直線位相の出力（ひずむ）"];
+for i = 1:3
+    ax = nexttile(tl); plot(ax, n, ys{i}, "Color", cs{i}, "LineWidth", 1.8), xlim(ax, [5 55]), ylim(ax, [-2.2 2.2]), grid(ax, "on")   % パルスのある範囲
+    title(ax, ts(i), "FontWeight","normal", "FontSize", 10), set(ax, "FontSize", 9)
+end
+xlabel(ax, "$n$", "Interpreter","latex")
+exportgraphics(fig, fullfile(resfolder,"vie-07-phase-demo.png"), "Resolution", 300)
+close(fig)
 %[text] 位相応答 $ \\angle H(\\mathrm{e}^{\\mathrm{j}\\omega}) $ を比べる。直線位相は $ -5\\omega $ の直線，全域通過フィルタは曲線。
 wl = linspace(0, pi, 256);
 [Hn, ~] = freqz([-a 1], [1 -a], wl);
-clf
-plot(wl, -5*wl, "Color", cMain, "LineWidth", 2), hold on
-plot(wl, unwrap(angle(Hn)), "Color", cWarm, "LineWidth", 2), hold off, grid on
-legend(["直線位相（傾き -5）","非直線位相"], "Location","southwest")
-xlabel("$\omega$", "Interpreter","latex"), ylabel("$\angle H(\mathrm{e}^{\mathrm{j}\omega})$", "Interpreter","latex")
-xlim([0 pi]), set(gca, "FontSize", 13)
-xticks([0 pi/2 pi]), xticklabels(["0","\pi/2","\pi"])
-exportgraphics(gca, fullfile(resfolder,"vie-07-phase-resp.png"), "Resolution", 120, "Padding", 10)
+fig = figure(Units="centimeters", Position=[2 2 7 6], Color="w");   % スライドにほぼ原寸で載せる
+ax = axes(fig);
+plot(ax, wl, -5*wl, "Color", cMain, "LineWidth", 2.4), hold(ax, "on")
+plot(ax, wl, unwrap(angle(Hn)), "Color", cWarm, "LineWidth", 2.4), hold(ax, "off"), grid(ax, "on")
+legend(ax, ["直線位相（傾き -5）","非直線位相"], "Location","east", "FontSize", 9)
+xlabel(ax, "$\omega$", "Interpreter","latex"), ylabel(ax, "$\angle H(\mathrm{e}^{\mathrm{j}\omega})$", "Interpreter","latex")
+xlim(ax, [0 pi]), set(ax, "FontSize", 11)
+xticks(ax, [0 pi/2 pi]), xticklabels(ax, ["0","\pi/2","\pi"])
+exportgraphics(fig, fullfile(resfolder,"vie-07-phase-resp.png"), "Resolution", 300)
+close(fig)
 %%
 %[text] ## 画像信号の振幅スペクトルと位相スペクトル
 %[text] 教科書のサンプル画像 msipimg04（石造りの建物）をグレースケールにして $ 256\\times256 $ 画素に縮小し，DFT を求めて振幅スペクトル（対数表示，原点を中央に移動）と位相スペクトルを表示する。アーチや柱の輪郭がはっきりした画像なので，位相だけからの再構成で輪郭が残る様子がよく分かる（msipimg05 の石像，06 の路面，01 の海岸と見比べて選んだ）。
@@ -319,19 +334,23 @@ hs = [1 3 3 1]/8; hn = [4 2 1 1]/8;
 cs = (numel(hs) - 1)/2                         % 対称の中心
 assert(isequal(hs, fliplr(hs)))
 [Hs, ~] = freqz(hs, 1, wl); [Hnn, ~] = freqz(hn, 1, wl);
-tiledlayout(1,3,"TileSpacing","compact","Padding","compact")
-nexttile
-stem(0:3, hs, "filled", "Color", cMain, "LineWidth", 1.5), hold on
-stem(0:3, hn, "Color", cWarm, "LineWidth", 1.5), hold off
-xlim([-0.5 3.5]), legend(["偶対称","非対称"]), title("インパルス応答")
-xlabel("$n$", "Interpreter","latex"), ylabel("$h[n]$", "Interpreter","latex"), set(gca, "FontSize", 14)
-nexttile([1 2])
-plot(wl(1:end-1), unwrap(angle(Hs(1:end-1))), "Color", cMain, "LineWidth", 2), hold on   % ω = π は H = 0 で位相が定まらないので除く
-plot(wl, unwrap(angle(Hnn)), "Color", cWarm, "LineWidth", 2), hold off, grid on
-legend(["偶対称：直線位相","非対称：非直線位相"], "Location","southwest"), xlim([0 pi])
-xticks([0 pi/2 pi]), xticklabels(["0","\pi/2","\pi"])
-xlabel("$\omega$", "Interpreter","latex"), ylabel("$\angle H(\mathrm{e}^{\mathrm{j}\omega})$", "Interpreter","latex"), title("位相応答"), set(gca, "FontSize", 14)
-exportgraphics(gcf, fullfile(resfolder,"vie-07-sym-phase.png"), "Resolution", 120, "Padding", 10)
+fig = figure(Units="centimeters", Position=[2 2 12 5], Color="w");   % スライドにほぼ原寸で載せる
+tl = tiledlayout(fig, 1, 3, "TileSpacing","compact", "Padding","compact");
+ax = nexttile(tl);
+stem(ax, 0:3, hs, "filled", "Color", cMain, "LineWidth", 2, "MarkerSize", 5), hold(ax, "on")
+stem(ax, 0:3, hn, "Color", cWarm, "LineWidth", 2, "MarkerSize", 5), hold(ax, "off")
+xlim(ax, [-0.5 3.5]), ylim(ax, [0 0.85]), xticks(ax, 0:3), yticks(ax, 0:0.2:0.6), grid(ax, "on")   % 上を凡例用に空ける
+legend(ax, ["偶対称","非対称"], "Location","northeast", "FontSize", 8), title(ax, "インパルス応答", "FontWeight","normal")
+xlabel(ax, "$n$", "Interpreter","latex"), ylabel(ax, "$h[n]$", "Interpreter","latex"), set(ax, "FontSize", 10)
+ax = nexttile(tl, [1 2]);
+plot(ax, wl(1:end-1), unwrap(angle(Hs(1:end-1))), "Color", cMain, "LineWidth", 2.4), hold(ax, "on")   % ω = π は H = 0 で位相が定まらないので除く
+plot(ax, wl, unwrap(angle(Hnn)), "Color", cWarm, "LineWidth", 2.4), hold(ax, "off"), grid(ax, "on")
+legend(ax, ["偶対称：直線位相","非対称：非直線位相"], "Location","southwest", "FontSize", 8), xlim(ax, [0 pi]), ylim(ax, [-6.8 0.4])   % 左下を凡例用に空ける
+xticks(ax, [0 pi/2 pi]), xticklabels(ax, ["0","\pi/2","\pi"])
+xlabel(ax, "$\omega$", "Interpreter","latex"), ylabel(ax, "$\angle H(\mathrm{e}^{\mathrm{j}\omega})$", "Interpreter","latex")
+title(ax, "位相応答", "FontWeight","normal"), set(ax, "FontSize", 10)
+exportgraphics(fig, fullfile(resfolder,"vie-07-sym-phase.png"), "Resolution", 300)
+close(fig)
 slope = mean(diff(unwrap(angle(Hs(1:200))))./diff(wl(1:200)))   % 傾き ≈ -1.5
 vie.savetex("vie-07-sym-slope", sprintf("%.1f", slope));
 vie.savetex("vie-07-sym-c", sprintf("%g", cs));
