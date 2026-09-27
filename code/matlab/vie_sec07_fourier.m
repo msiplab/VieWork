@@ -285,8 +285,8 @@ xticks([0 pi/2 pi]), xticklabels(["0","\pi/2","\pi"])
 exportgraphics(gca, fullfile(resfolder,"vie-07-phase-resp.png"), "Resolution", 120, "Padding", 10)
 %%
 %[text] ## 画像信号の振幅スペクトルと位相スペクトル
-%[text] cameraman.tif の DFT を求め，振幅スペクトル（対数表示，原点を中央に移動）と位相スペクトルを表示する。
-Xc = im2double(imread("cameraman.tif"));
+%[text] 教科書のサンプル画像 msipimg04（石造りの建物）をグレースケールにして $ 256\\times256 $ 画素に縮小し，DFT を求めて振幅スペクトル（対数表示，原点を中央に移動）と位相スペクトルを表示する。アーチや柱の輪郭がはっきりした画像なので，位相だけからの再構成で輪郭が残る様子がよく分かる（msipimg05 の石像，06 の路面，01 の海岸と見比べて選んだ）。
+Xc = im2double(vie.msipimg(4, 256, "gray"));   % msipimg04（石造りの建物）
 Fc = fft2(Xc);
 magS = log(1 + abs(fftshift(Fc)));
 phaS = angle(fftshift(Fc));
