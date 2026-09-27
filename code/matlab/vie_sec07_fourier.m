@@ -34,18 +34,25 @@ f = [1 3 7]; A = [1 0.5 0.25];
 comps = A'.*cos(2*pi*f'*t);
 xsum = sum(comps, 1);
 compColors = [cCool; cMain; cWarm];
-tiledlayout(4,1,"TileSpacing","compact","Padding","compact")
+ttl = ["cos 2{\pi}{\itt}", "0.5 cos 6{\pi}{\itt}", "0.25 cos 14{\pi}{\itt}"];
+fig = figure(Units="centimeters", Position=[2 2 8 7.5], Color="w");   % スライドにほぼ原寸で載せる
+tl = tiledlayout(fig, 4, 1, "TileSpacing","compact", "Padding","compact");
 for k = 1:3
-    nexttile, plot(t, comps(k,:), "Color", compColors(k,:), "LineWidth", 1.5), ylim([-1.1 1.1]), axis off
+    ax = nexttile(tl); plot(ax, t, comps(k,:), "Color", compColors(k,:), "LineWidth", 1.5), ylim(ax, [-1.1 1.1]), axis(ax, "off")
+    title(ax, ttl(k), "FontSize", 12, "FontWeight","normal", "Color", compColors(k,:))
 end
-nexttile, plot(t, xsum, "k", "LineWidth", 2), axis off, title("和 {\itx}({\itt})")
-exportgraphics(gcf, fullfile(resfolder,"vie-07-sumsin.png"), "Resolution", 120, "Padding", 10)
-clf
-stem(2*pi*f, A, "filled", "Color", cMain, "LineWidth", 2), grid on, xlim([0 2*pi*8])
-xticks(2*pi*f), xticklabels(["2\pi","6\pi","14\pi"])
-xlabel("角周波数 {\it\nu}"), ylabel("振幅"), title("周波数スペクトル（最大角周波数 14\pi）")
-set(gca, "FontSize", 13)
-exportgraphics(gca, fullfile(resfolder,"vie-07-spec1d.png"), "Resolution", 120, "Padding", 10)
+ax = nexttile(tl); plot(ax, t, xsum, "k", "LineWidth", 2), axis(ax, "off")
+title(ax, "和 {\itx}({\itt})", "FontSize", 12, "FontWeight","normal")
+exportgraphics(fig, fullfile(resfolder,"vie-07-sumsin.png"), "Resolution", 300)
+close(fig)
+fig = figure(Units="centimeters", Position=[2 2 8 6.5], Color="w");
+ax = axes(fig);
+stem(ax, 2*pi*f, A, "filled", "Color", cMain, "LineWidth", 2), grid(ax, "on"), xlim(ax, [0 2*pi*8]), ylim(ax, [0 1.1])
+xticks(ax, 2*pi*f), xticklabels(ax, ["2\pi","6\pi","14\pi"])
+xlabel(ax, "角周波数 {\it\nu}"), ylabel(ax, "振幅")
+set(ax, "FontSize", 11)
+exportgraphics(fig, fullfile(resfolder,"vie-07-spec1d.png"), "Resolution", 300)
+close(fig)
 %%
 %[text] ## 例題：多次元余弦波の標本化
 %[text] 教科書の例題。 $ D $ 次元余弦波 $ u(\\boldsymbol{q})=\\cos(\\boldsymbol{\\nu}^\\top\\boldsymbol{q}) $ をディラックのデルタで，標本化行列 $ \\boldsymbol{L}=\\mathrm{diag}(\\Delta\_1,\\ldots,\\Delta\_D) $ の格子上で標本化すると
@@ -159,12 +166,15 @@ vie.savetex("vie-07-X2col", vie.arr2tex(real(Xv), "%g"));
 N = 2.^(1:10);
 mulMat = N.^2;
 mulFFT = N/2.*log2(N);
-clf
-semilogy(N, mulMat, "o-", "Color", cWarm, "LineWidth", 1.5), hold on
-semilogy(N, mulFFT, "s-", "Color", cMain, "LineWidth", 1.5), hold off, grid on
-legend(["行列演算 {\itN}^2","FFT ({\itN}/2)log_2{\itN}"], "Location","northwest")
-xlabel("$N$", "Interpreter","latex"), ylabel("複素乗算回数"), set(gca, "FontSize", 13)
-exportgraphics(gca, fullfile(resfolder,"vie-07-fftcount.png"), "Resolution", 120, "Padding", 10)
+fig = figure(Units="centimeters", Position=[2 2 7 5.5], Color="w");   % スライドにほぼ原寸で載せる
+ax = axes(fig);
+loglog(ax, N, mulMat, "o-", "Color", cWarm, "LineWidth", 2.2, "MarkerSize", 5, "MarkerFaceColor", cWarm), hold(ax, "on")
+loglog(ax, N, mulFFT, "s-", "Color", cMain, "LineWidth", 2.2, "MarkerSize", 5, "MarkerFaceColor", cMain), hold(ax, "off"), grid(ax, "on")
+xlim(ax, [2 1024]), ylim(ax, [1 1e8]), xticks(ax, [2 8 32 128 512]), yticks(ax, 10.^(0:2:8))   % 左上を凡例用に空ける
+legend(ax, ["行列演算 {\itN}^2","FFT ({\itN}/2)log_2{\itN}"], "Location","northwest", "FontSize", 10)
+xlabel(ax, "{\itN}"), ylabel(ax, "複素乗算回数"), set(ax, "FontSize", 11)
+exportgraphics(fig, fullfile(resfolder,"vie-07-fftcount.png"), "Resolution", 300)
+close(fig)
 n1024 = [mulMat(end) mulFFT(end) mulMat(end)/mulFFT(end)]
 vie.savetex("vie-07-fft-mat",   vie.fmtint(mulMat(end)));
 vie.savetex("vie-07-fft-fft",   vie.fmtint(mulFFT(end)));
