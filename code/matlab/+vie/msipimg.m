@@ -10,7 +10,7 @@ function [X, imgfile] = msipimg(idx, sz, mode)
 %   [X, IMGFILE] = VIE.MSIPIMG(...) は読み込んだファイルの場所も返します。
 %
 %   画像は次の順に探します。
-%     1. VieWork の data フォルダ
+%     1. VieWork の data フォルダ（msipimg01〜08.tif を Git で管理している）
 %     2. VieWork と同じ階層に置いた MsipWorkM の data フォルダ
 %     3. GitHub（msiplab/MsipWorkM）から data フォルダに取得
 %

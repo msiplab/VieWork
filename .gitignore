@@ -118,5 +118,8 @@ Thumbs.db
 .idea/
 
 # ---- データと出力（原則として管理外）----
-data/
+# data は原則として管理外．スライド用の参考資料サンプル画像 msipimg##.tif だけ管理する
+# （Kodak の kodim##.png は vie.download_img で取得する演習用なので管理しない）
+data/*
+!data/msipimg[0-9][0-9].tif
 results/

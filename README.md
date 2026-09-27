@@ -12,11 +12,11 @@ VieWork/
 │   ├── matlab/        MATLAB ライブスクリプト（プレーンテキスト .m 形式）
 │   │   └── +vie/      共通ユーティリティ関数
 │   └── python/        Jupyter ノートブック（Google Colab 用）
-├── data/              画像データ（ダウンロード取得・Git 管理外）
+├── data/              画像データ（msipimg##.tif は Git 管理，kodim##.png はダウンロード取得・管理外）
 └── results/           スクリプトが出力する図・画像（Git 管理外）
 ```
 
-`data` と `results` は Git の管理外です。`vie.prjfolders` が必要に応じて作成します。
+`results` は Git の管理外です。`data` のうち，スライドに使う参考資料のサンプル画像 `msipimg01.tif`〜`msipimg08.tif`（MsipWorkM と同じもの）だけを Git で管理し，`vie.msipimg` で読み込みます。演習用の Kodak 画像 `kodim##.png` は `vie.download_img` で取得するもので，Git では管理しません。
 
 ## MATLAB コードの動かし方
 
