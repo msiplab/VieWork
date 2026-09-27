@@ -70,22 +70,32 @@ imwrite(E, fullfile(resfolder,"vie-11-edge.png"))
 imwrite(S/max(S(:)), fullfile(resfolder,"vie-11-edge-spec.png"))
 %%
 %[text] ## 大域的定速移動モデル：時空間画像とスペクトル
-%[text] 一次元の静止信号 $ x\_0(q) $ が速度 $ v $ で動く： $ x(q,t)=x\_0(q-vt) $ 。水平位置 $ n $ と時刻 $ t $ の配列を作り，二次元 DFT の振幅スペクトルを見る。スペクトルは直線 $ \\nu\_\\mathrm{t}=-v\\,\\nu $ 上に集中し，速いほど傾きが大きい。
-x0 = exp(-((0:N-1) - N/2).^2/(2*3^2));     % ガウス形の塊
-k = [0:N/2-1, -N/2:-1];                     % DFT の周波数番号
+%[text] 一次元の静止信号 $ x\_0(q) $ が垂直方向に速度 $ v $ で動く： $ x(q\_\\mathrm{v},t)=x\_0(q\_\\mathrm{v}-vt) $ 。縦軸を垂直位置 $ q\_\\mathrm{v} $ ，横軸を時刻 $ t $ とする配列を作り，二次元 DFT の振幅スペクトルを見る（後の標本化の図と同じく，横軸 $ \\nu\_\\mathrm{t} $ ，縦軸 $ \\nu\_\\mathrm{v} $ ）。スペクトルは直線 $ \\nu\_\\mathrm{t}=-v\\,\\nu\_\\mathrm{v} $ 上に集中し，静止なら $ \\nu\_\\mathrm{t}=0 $ （縦の直線），速いほど傾く。
+%[text] 非整数の速度では $ N $ フレームで周期がつながらず，時間方向の端の不連続がスペクトルの漏れ（縦縞）になるので，時間方向にハン窓を掛けてから DFT する。
+x0 = exp(-((0:N-1)' - N/4).^2/(2*3^2));    % ガウス形の塊（列ベクトル：垂直位置．v=0.5 で折り返さないよう下寄り）
+k = [0:N/2-1, -N/2:-1]';                    % DFT の周波数番号
+wt = hann(N)';                              % 時間方向の窓
 vs = [0 0.5 1];
-tiledlayout(2,3,"TileSpacing","compact","Padding","compact")
 for i = 1:numel(vs)
     v = vs(i);
-    Xt = zeros(N);                           % 行：時刻 t，列：位置 n
+    Xt = zeros(N);                           % 行：垂直位置 q_v，列：時刻 t
     for t = 0:N-1                            % 周波数領域でずらす（非整数の速度も扱える）
-        Xt(t+1,:) = real(ifft(fft(x0).*exp(-1j*2*pi*k*v*t/N)));
+        Xt(:,t+1) = real(ifft(fft(x0).*exp(-1j*2*pi*k*v*t/N)));
     end
-    nexttile(i), imshow(Xt), title(sprintf("v=%g", v))
-    Sp = log(1 + abs(fftshift(fft2(Xt))));
-    nexttile(i+3), imshow(Sp, []), title("振幅スペクトル")
-    imwrite(Xt, fullfile(resfolder,sprintf("vie-11-xt-v%02d.png", round(10*v))))
-    imwrite(Sp/max(Sp(:)), fullfile(resfolder,sprintf("vie-11-spec-v%02d.png", round(10*v))))
+    Sp = log(1 + abs(fftshift(fft2(Xt.*wt))));
+    Z = {Xt, Sp/max(Sp(:))};
+    lab = {["$t$", "$q_\mathrm{v}$"], ["$\nu_\mathrm{t}$", "$\nu_\mathrm{v}$"]};
+    fn = [sprintf("vie-11-xt-v%02d.png", round(10*v)), sprintf("vie-11-spec-v%02d.png", round(10*v))];
+    for j = 1:2
+        fig = figure(Units="centimeters", Position=[2 2 3.4 3.4]);
+        ax = axes(fig);
+        imagesc(ax, Z{j}), axis(ax, "xy", "image"), colormap(ax, gray(256))
+        set(ax, "XTick", [], "YTick", [])
+        xlabel(ax, lab{j}(1), "Interpreter","latex", "FontSize", 10)
+        ylabel(ax, lab{j}(2), "Interpreter","latex", "FontSize", 10, "Rotation", 0)
+        exportgraphics(fig, fullfile(resfolder, fn(j)), "Resolution", 300)
+        close(fig)
+    end
 end
 %%
 %[text] ## 大域的定速移動モデル：三次元のスペクトル（垂直移動の例）
