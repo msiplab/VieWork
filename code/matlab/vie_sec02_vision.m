@@ -6,9 +6,8 @@
 %[text:tableOfContents]{"heading":"目次"}
 %%
 %[text] ## 準備
-%[text] Kodak Lossless True Color Image Suite の画像を `data` フォルダに取得する（取得済みなら何もしない）。
-[datfolder,resfolder] = vie.prjfolders();
-vie.download_img(false)
+%[text] 写真は教科書のサンプル画像 msipimg01〜08（512×512 のカラー）に限り，`vie.msipimg` で読み込む（`data` フォルダに無ければ取得する）。
+[~,resfolder] = vie.prjfolders();
 %[text] 図に使うロゴの 3 色と，それを白と混ぜた淡い色を用意する。
 cMain = [0 136 85]/255;            % メイン（緑）
 cCool = [46 117 182]/255;          % 寒色系（青）
@@ -44,8 +43,8 @@ imwrite(Cw, fullfile(resfolder,"vie-02-contrast-white.png"))
 %%
 %[text] ## 視覚特性のデモ：色順応
 %[text] 左に青みがかった画像，右に黄みがかった画像を並べ，間に白い点を置く。白い点をしばらく見つめると，目が色に順応する。
-X = im2double(imread(fullfile(datfolder,"kodim04.png")));
-X = imresize(X, 0.5);
+%[text] 画像は msipimg02（花束）を 384×384 に縮小して使う。白いカーネーションが含まれるので，順応の前後で白の見え方が変わるのが分かりやすい。
+X = im2double(vie.msipimg(2, 384));
 tintB = X .* reshape([0.55 0.65 1.00],1,1,3);    % 青みがかった画像
 tintY = X .* reshape([1.00 0.90 0.45],1,1,3);    % 黄みがかった画像
 gap = zeros(size(X,1), 24, 3);
@@ -132,7 +131,8 @@ exportgraphics(gcf, fullfile(resfolder,"vie-02-acuity-geom.png"), "Resolution",2
 %[text] 量子化は振幅の離散化である。教科書 2.1.6 項の**線形量子化**は，量子化ステップ $ Q $ を用いて
 %[text]{"align":"center"} $ y=\\phi(x)=\\lfloor x/Q \\rceil,\\quad \\check{x}=Qy $
 %[text] と表される（ $ \\lfloor\\cdot\\rceil $ は四捨五入， $ \\check{x} $ は逆量子化の結果）。画素値 $ x\\in[0,1] $ を $ L=2^\\beta $ 階調で表すときは $ Q=(2^\\beta-1)^{-1} $ とする。 $ \\beta $ を小さくすると，緩やかな濃淡に**擬似輪郭**が現れる。
-Xg = im2double(imread("cameraman.tif"));
+%[text] 画像は msipimg05（石像の顔）のグレースケールを 256×256 に縮小して使う。空のなめらかな階調に擬似輪郭が現れ，石の細部との違いが分かりやすい。
+Xg = im2double(vie.msipimg(5, 256, "gray"));
 betas = [1 2 8];                                 % 1 画素あたりのビット数 β
 emax = zeros(size(betas));
 tiledlayout(2,numel(betas),"TileSpacing","compact","Padding","compact")
@@ -174,8 +174,9 @@ exportgraphics(gcf, fullfile(resfolder,"vie-02-quant-curve.png"), "Resolution",2
 %[text] ## 色の表し方：RGB 表色系
 %[text] 色 $ C $ を 3 原色の単位ベクトル $ \\mathbf{e}\_\\mathrm{r},\\mathbf{e}\_\\mathrm{g},\\mathbf{e}\_\\mathrm{b} $ のベクトル和で表す。
 %[text]{"align":"center"} $ C = R\\,\\mathbf{e}\_\\mathrm{r} + G\\,\\mathbf{e}\_\\mathrm{g} + B\\,\\mathbf{e}\_\\mathrm{b} $
-Y = im2double(imread(fullfile(datfolder,"kodim23.png")));
-Y = imresize(Y, 0.5);
+%[text] 画像は msipimg02（花束）を 384×384 に縮小し，下側の 256×384 画素（赤・橙・黄・白の花が並ぶ部分）を切り出して使う。花の色ごとに R, G, B の成分の強さが異なる。
+Y = im2double(vie.msipimg(2, 384));
+Y = Y(129:384, :, :);
 Z = zeros(size(Y,1),size(Y,2));
 Yr = cat(3,Y(:,:,1),Z,Z); Yg = cat(3,Z,Y(:,:,2),Z); Yb = cat(3,Z,Z,Y(:,:,3));
 tiledlayout(1,4,"TileSpacing","compact","Padding","compact")
@@ -188,7 +189,7 @@ imwrite(Yr, fullfile(resfolder,"vie-02-rgb-r.png"))
 imwrite(Yg, fullfile(resfolder,"vie-02-rgb-g.png"))
 imwrite(Yb, fullfile(resfolder,"vie-02-rgb-b.png"))
 %[text] ひとつの画素を取り出すと，3 つの数の組になっている。
-pr = 170; pc = 280;                % 右のオウムの赤い胸のあたり
+pr = 202; pc = 110;                % 左下の赤い花（ダリア）のあたり
 rgb = squeeze(Y(pr,pc,:))'
 vie.savetex("vie-02-rgb-pix", sprintf("R=%.2f,\\ G=%.2f,\\ B=%.2f", rgb));
 %%
@@ -221,7 +222,8 @@ vie.savetex("vie-02-rate-RG", sprintf("%.0f",RGbps));
 %[text] 教科書 1.4.1 項の例「アレイセンサ」では，センサ上に結像した光の強度分布 $ u(q\_\\mathrm{v},q\_\\mathrm{h}) $ から，撮像装置の点光源応答 $ \\breve{\\varphi} $ を介して，標本間隔 $ \\Delta\_\\mathrm{v},\\Delta\_\\mathrm{h} $ ごとに配列の要素を得る。
 %[text]{"align":"center"} $ x[n\_\\mathrm{v},n\_\\mathrm{h}]=\\iint\_{\\mathbb{R}^2}\\breve{\\varphi}(\\Delta\_\\mathrm{v}n\_\\mathrm{v}-q\_\\mathrm{v},\\Delta\_\\mathrm{h}n\_\\mathrm{h}-q\_\\mathrm{h})\\,u(q\_\\mathrm{v},q\_\\mathrm{h})\\,\\mathrm{d}q\_\\mathrm{v}\\mathrm{d}q\_\\mathrm{h} $
 %[text] ここでは高解像度の画像を連続な強度分布とみなし， $ \\breve{\\varphi} $ を一辺 $ \\Delta $ 画素の矩形（受光面の中で光を平均する）として，標本間隔 $ \\Delta=\\Delta\_\\mathrm{v}=\\Delta\_\\mathrm{h} $ を広げたときの観測をまねる。標本間隔が広いほど細部が失われる。
-Xs = rgb2gray(im2double(imread(fullfile(datfolder,"kodim23.png"))));
+%[text] 画像は細い線状の構造が多い msipimg07（モンブラン）のグレースケールを使う。
+Xs = im2double(vie.msipimg(7, [], "gray"));
 deltas = [1 4 8];                                % 標本間隔 Δ（元の画素単位）
 tiledlayout(1,numel(deltas),"TileSpacing","compact","Padding","compact")
 for k = 1:numel(deltas)
@@ -241,7 +243,9 @@ vie.savetex("vie-02-bayer-n", sprintf("%d", Nsens/1e4));
 vie.savetex("vie-02-bayer-r", sprintf("%d", counts(1)/1e4));
 vie.savetex("vie-02-bayer-g", sprintf("%d", counts(2)/1e4));
 %[text] 欠けた色は周囲から補間する（デモザイキング）。原画像からベイヤ配列の観測を作り，MATLAB の `demosaic` で戻してみる。
-crop = im2uint8(Y(41:120, 61:140, :));            % 一部を切り出す
+%[text] 画像は msipimg02（花束）の原寸から，黄色い花弁に細い暗い斑点が並ぶ 80×80 画素を切り出す。斑点の縁に補間による色のにじみ（ジッパー状の偽色）が現れる。
+Xb = vie.msipimg(2);
+crop = Xb(181:260, 381:460, :);                   % 一部を切り出す
 mosaic = zeros(size(crop,1),size(crop,2),"uint8");
 mosaic(1:2:end,1:2:end) = crop(1:2:end,1:2:end,1);    % R
 mosaic(1:2:end,2:2:end) = crop(1:2:end,2:2:end,2);    % G
