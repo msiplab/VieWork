@@ -214,69 +214,16 @@ exportgraphics(gca, fullfile(resfolder,"vie-14-hough-lines.png"), "Resolution", 
 nlines = numel(hl)
 colormap(gca, gray)
 %%
-%[text] ## 活性化関数とニューロンの数値例
-%[text] 活性化関数 $ \\phi(\\cdot) $ の例：シグモイド関数 $ 1/(1+\\mathrm{e}^{-u}) $ ， $ \\tanh u $ ，ReLU（整流線形関数） $ \\max(0,u) $ 。
+%[text] ## 活性化関数
+%[text] 活性化関数 $ \\phi(\\cdot) $ の例（参考資料 2 章）：シグモイド関数 $ 1/(1+\\mathrm{e}^{-au}) $ （ $ a=1 $ ，章末問題），ReLU（整流線形関数） $ \\max(0,u) $ （2.1.5 項，ヒンジ関数で $ \\lambda=0 $ としたランプ関数）。
 u = linspace(-4, 4, 401);
 clf
 plot(u, 1./(1+exp(-u)), "Color", cMain, "LineWidth", 2), hold on
-plot(u, tanh(u), "Color", cCool, "LineWidth", 2)
 plot(u, max(u,0), "Color", cWarm, "LineWidth", 2), hold off
-grid on, ylim([-1.2 2])
-legend(["シグモイド 1/(1+e^{-{\itu}})", "tanh {\itu}", "ReLU max(0,{\itu})"], "Location", "northwest", "Interpreter", "tex")
+grid on, ylim([-0.5 2])
+legend(["シグモイド 1/(1+e^{-{\itu}})", "ReLU max(0,{\itu})"], "Location", "northwest", "Interpreter", "tex")
 xlabel("{\itu}"), ylabel("\phi({\itu})"), set(gca, "FontSize", 12)
 exportgraphics(gca, fullfile(resfolder,"vie-14-activation.png"), "Resolution", 150, "Width", 9, "Height", 6.5, "Units", "centimeters")
-%[text] 入力 $ \\mathbf{x}=(2\\ \\ 1)^\\top $ ，重み $ \\mathbf{w}=(0.5\\ \\ -1)^\\top $ ，バイアス $ b=0.2 $ のニューロン： $ u=\\mathbf{w}^\\top\\mathbf{x}+b $ 。
-w = [0.5 -1]; x = [2; 1]; b = 0.2;
-un = w*x + b
-out = [1/(1+exp(-un)) tanh(un) max(un,0)]
-vie.savetex("vie-14-neuron-u", sprintf("%.1f", un));
-vie.savetex("vie-14-neuron-sig", sprintf("%.3f", out(1)));
-vie.savetex("vie-14-neuron-tanh", sprintf("%.3f", out(2)));
-vie.savetex("vie-14-neuron-relu", sprintf("%.1f", out(3)));
-%%
-%[text] ## 教師あり学習と誤差逆伝播法：XOR の学習
-%[text] 入力 2，中間層 4（ $ \\phi^{(1)}(\\cdot)=\\tanh(\\cdot) $ ），出力 1（ $ \\phi^{(2)}(\\cdot) $ ：シグモイド関数）の $ T=2 $ 層のネットワーク $ \\mathbf{f}\_{\\boldsymbol{\\Theta}} $ を，入力と参照データの $ S=4 $ 組の事例で学習する。学習パラメータは $ \\boldsymbol{\\Theta}=\\{\\mathbf{W}^{(t)},\\mathbf{b}^{(t)}\\}\_{t=1}^{2} $ 。
-%[text] 損失関数は教科書 10.1.1 項の（1/2 倍した）平均二乗誤差
-%[text] $ \\mathfrak{L}(\\boldsymbol{\\Theta})=\\frac{1}{2}\\left(\\frac{1}{S}\\sum\_{n=1}^{S}\\|\\mathbf{x}\_\\star^{\[n\]}-\\mathbf{f}\_{\\boldsymbol{\\Theta}}(\\mathbf{v}^{\[n\]})\\|\_2^2\\right) $
-%[text] とする。事例 $ n $ の損失 $ \\mathfrak{L}^{\[n\]}(\\boldsymbol{\\Theta})=\\frac{1}{2}\\|\\mathbf{x}\_\\star^{\[n\]}-\\mathbf{x}^{(2)}\\|\_2^2 $ の勾配を出力層から入力層へ順に求め（誤差逆伝播法），その平均 $ \\nabla\\mathfrak{L}(\\boldsymbol{\\Theta})=\\frac{1}{S}\\sum\_{n=1}^{S}\\nabla\\mathfrak{L}^{\[n\]}(\\boldsymbol{\\Theta}) $ を使って最急降下法 $ \\mathbf{W}^{(t)}\\leftarrow\\mathbf{W}^{(t)}-\\eta\\nabla\_{\\mathbf{W}^{(t)}}\\mathfrak{L}(\\boldsymbol{\\Theta}) $ で更新する（全事例をまとめて使うバッチ学習）。
-%[text] **ステップサイズ** $ \\eta $ **の選び方**：損失 $ \\mathfrak{L} $ は二乗誤差の総和 $ \\sum\_n\\|\\cdot\\|\_2^2 $ の $ 1/(2S)=1/8 $ 倍なので，勾配も 1/8 倍になる。最急降下法が振動・発散しない目安は，損失のヘッセ行列の最大固有値 $ \\lambda\_\\mathrm{max} $ に対して $ \\eta<2/\\lambda\_\\mathrm{max} $ である。下で確かめるように学習中は $ \\lambda\_\\mathrm{max}<0.3 $ なので（ $ 2/\\lambda\_\\mathrm{max}>6.6 $ ），余裕をもって $ \\eta=4 $ とする。
-Xx = [0 0 1 1; 0 1 0 1];                         % 入力 v^[n]（列が 1 事例）
-yx = [0 1 1 0];                                  % 参照データ x_*^[n]（XOR）
-S = size(Xx, 2);                                 % 事例数 S = 4
-rng(3)
-W1 = randn(4,2); b1 = zeros(4,1); W2 = randn(1,4); b2 = 0;   % 学習パラメータの初期値
-eta = 4; nEpoch = 3000;                          % ステップサイズと反復回数
-Lhist = zeros(1, nEpoch);
-kChk = 1:100:nEpoch;                             % ヘッセ行列を調べる反復
-lamMax = zeros(size(kChk));
-for ep = 1:nEpoch
-    if any(ep == kChk)
-        lamMax(ep == kChk) = xorhessmax([W1(:); b1; W2(:); b2], Xx, yx);
-    end
-    H = tanh(W1*Xx + b1);                        % 順伝播：中間層の出力 x^(1)
-    Y = 1./(1 + exp(-(W2*H + b2)));              % 順伝播：出力層の出力 x^(2)
-    Lhist(ep) = 0.5*mean(sum((yx - Y).^2, 1));   % 損失 L(Θ) = (1/2)(1/S)Σ||x_*^[n] - x^(2)||^2
-    dY = (Y - yx).*Y.*(1 - Y);                   % 逆伝播：出力層の誤差 δ^(2)（事例ごと）
-    dH = (W2'*dY).*(1 - H.^2);                   % 逆伝播：中間層の誤差 δ^(1)（事例ごと）
-    W2 = W2 - eta*(dY*H')/S;   b2 = b2 - eta*sum(dY)/S;      % ∇_{W^(2)}L = (1/S)Σ_n δ^(2) (x^(1))^T
-    W1 = W1 - eta*(dH*Xx')/S;  b1 = b1 - eta*sum(dH,2)/S;    % ∇_{W^(1)}L = (1/S)Σ_n δ^(1) (x^(0))^T
-end
-Yfinal = 1./(1 + exp(-(W2*tanh(W1*Xx + b1) + b2)))
-Lfinal = 0.5*mean(sum((yx - Yfinal).^2, 1))
-%[text] 学習中のヘッセ行列の最大固有値と，ステップサイズの条件 $ \\eta<2/\\lambda\_\\mathrm{max} $ の確認。
-lamMaxMax = max(lamMax)
-assert(eta < 2/lamMaxMax, "ステップサイズが大きすぎる")
-%[text] 学習曲線（損失 $ \\mathfrak{L}(\\boldsymbol{\\Theta}) $ の推移，縦軸は対数）。
-frakL = char([0xD835 0xDD0F]);                   % 𝔏（U+1D50F）
-clf
-semilogy(0:nEpoch-1, Lhist, "Color", cMain, "LineWidth", 2), grid on
-ylim([1e-5 1]), yticks(10.^(-5:0))
-xlabel("反復回数"), ylabel("損失 " + frakL + "({\bf\Theta})"), set(gca, "FontSize", 12)
-exportgraphics(gca, fullfile(resfolder,"vie-14-xor-loss.png"), "Resolution", 150, "Width", 9, "Height", 6, "Units", "centimeters")
-vie.savetex("vie-14-xor-y", strjoin(compose("%.2f", Yfinal), ",\ "));
-vie.savetex("vie-14-xor-e0", sprintf("%.3f", Lhist(1)));
-vie.savetex("vie-14-xor-e", sci2tex(Lfinal));
-vie.savetex("vie-14-xor-eta", sprintf("%g", eta));
 %%
 %[text] ## 畳み込み層とプーリング層
 %[text] 4 種類のフィルタ（フィルタバンク）で畳み込み，ReLU を施し， $ 2\\times2 $ の最大値プーリングで縮小した特徴マップを並べる。入力は石造りの建物（msipimg04 をグレースケールにして 256×256 に縮小）で，柱の縦の縁と階段の横の縁がそれぞれ別の特徴マップに現れ，フィルタの方向選択性が分かる。
@@ -298,33 +245,6 @@ montage(maps, "Size", [1 4])
 %[text] - ハリスのコーナー検出，キャニーの輪郭線検出，ハフ変換はガウシアンフィルタと勾配フィルタ（第5回）を土台にする
 %[text] - ニューラルネットワークは重み付け和と活性化関数の多層構造で，損失関数（1/2 倍した平均二乗誤差）の勾配を誤差逆伝播法で求めて学習する。畳み込み層はフィルタバンクに相当する \
 %[text] © Copyright, Shogo MURAMATSU, All rights reserved.
-function lam = xorhessmax(th, V, Xs)
-% XOR ネットワークの損失 L(Θ) のヘッセ行列の最大固有値．
-% 勾配 xorgrad の中心差分でヘッセ行列を数値的に求める．th はパラメータを縦に並べたもの．
-K = numel(th); Hs = zeros(K); h = 1e-5;
-for i = 1:K
-    e = zeros(K,1); e(i) = h;
-    Hs(:,i) = (xorgrad(th+e, V, Xs) - xorgrad(th-e, V, Xs))/(2*h);
-end
-lam = max(eig((Hs + Hs')/2));
-end
-
-function g = xorgrad(th, V, Xs)
-% XOR ネットワーク（入力 2，中間層 4，出力 1）の損失 L(Θ) の勾配（誤差逆伝播法）．
-% th = [W1(:); b1; W2(:); b2]，V は入力（列が 1 事例），Xs は参照データ．
-S = size(V, 2);
-W1 = reshape(th(1:8), 4, 2); b1 = th(9:12); W2 = reshape(th(13:16), 1, 4); b2 = th(17);
-H = tanh(W1*V + b1); Y = 1./(1 + exp(-(W2*H + b2)));
-dY = (Y - Xs).*Y.*(1 - Y); dH = (W2'*dY).*(1 - H.^2);
-g = [reshape(dH*V', [], 1); sum(dH, 2); reshape(dY*H', [], 1); sum(dY)]/S;
-end
-
-function s = sci2tex(v)
-% 正の数 v を「仮数\times10^{指数}」の LaTeX 文字列にする（数式モードで使う）．
-e = floor(log10(v));
-s = sprintf("%.1f\\times10^{%d}", v/10^e, e);
-end
-
 %[appendix]{"version":"1.0"}
 %---
 %[metadata:view]
