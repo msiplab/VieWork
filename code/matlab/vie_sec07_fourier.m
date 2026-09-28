@@ -30,24 +30,6 @@ set(ax, "FontSize", 11)
 exportgraphics(fig, fullfile(resfolder,"vie-07-cos1d.png"), "Resolution", 300)
 close(fig)
 %%
-%[text] ## 二次元余弦波（教科書 図 4.2 と同じ波，原点を左上に）
-%[text] $ u(q\_\\mathrm{v},q\_\\mathrm{h})=\\cos(\\nu\_\\mathrm{v}q\_\\mathrm{v}+\\nu\_\\mathrm{h}q\_\\mathrm{h}) $ を $ q\_\\mathrm{v},q\_\\mathrm{h}\\in[0,1] $ で描く。空間座標の原点を分布の左上（ $ q\_\\mathrm{v} $ は下向き， $ q\_\\mathrm{h} $ は右向き）に合わせる。
-[Qh, Qv] = meshgrid(linspace(0, 1, 61));
-nus = [0 2*pi; 4*pi 0; 4*pi 2*pi];               % (a) (b) (c)：(ν_v, ν_h)
-tg = ["a","b","c"];
-for i = 1:3
-    fig = figure(Units="centimeters", Position=[2 2 6 4.6], Color="w");
-    ax = axes(fig);
-    surf(ax, Qh, Qv, cos(nus(i,1)*Qv + nus(i,2)*Qh), "EdgeColor","none"), colormap(ax, gray(256)), shading(ax, "interp")
-    set(ax, "YDir","reverse")                      % q_v は下（手前）向き：原点 (0,0) が左上（奥の左）
-    view(ax, -30, 45), axis(ax, "tight"), zlim(ax, [-1 1]), box(ax, "on")
-    xticks(ax, [0 0.5 1]), yticks(ax, [0 0.5 1]), zticks(ax, [-1 0 1])
-    xlabel(ax, "$q_\mathrm{h}$", "Interpreter","latex"), ylabel(ax, "$q_\mathrm{v}$", "Interpreter","latex")
-    set(ax, "FontSize", 9, "TickLabelInterpreter","latex")
-    exportgraphics(fig, fullfile(resfolder, "vie-07-cos2d-" + tg(i) + ".png"), "Resolution", 300)
-    close(fig)
-end
-%%
 %[text] ## 信号は正弦波の足し合わせ
 %[text] 3 つの余弦波（1, 3, 7 周期／単位時間，振幅 1, 0.5, 0.25）の和と，その振幅スペクトル（周波数分布）。
 f = [1 3 7]; A = [1 0.5 0.25];
