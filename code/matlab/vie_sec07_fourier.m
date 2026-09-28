@@ -105,7 +105,7 @@ dsft = @(w1,w2) 4*cos(w1/2).*cos(w2/2).*exp(-1j*(w1+w2)/2);
 Xs = [dsft(0,0) dsft(0,pi); dsft(pi,0) dsft(pi,pi)];
 maxerr = max(abs(Xs - X22), [], "all")        % 一致を確認（丸め誤差程度）
 vie.savetex("vie-07-ex-x", vie.arr2tex(x22,"%g"));
-vie.savetex("vie-07-ex-X", vie.arr2tex(real(X22),"%g"));
+vie.savetex("vie-07-ex-Xdft", vie.arr2tex(real(X22),"%g"));   % 小文字の vie-07-ex-x と大文字小文字だけで区別しない（Windows で同じファイルになる）
 %[text] DSFT の閉じた形を，定義の和と任意の周波数で比べておく。
 wt = 2*pi*rand(2,5) - pi;
 [n2e, n1e] = meshgrid(0:1);
