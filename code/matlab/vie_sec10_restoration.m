@@ -14,15 +14,21 @@ cWarm = [197 90 17]/255;                        % 暖色系（橙 #C55A11）
 cGray = 0.55*[1 1 1];                           % 灰色
 %%
 %[text] ## DCT の問題点：ブロックノイズとモスキートノイズ
-%[text] 低画質（品質 5）の JPEG で圧縮すると， $ 8\\times8 $ ブロックの境界が見える（ブロックノイズ），エッジのまわりにもやもやした揺らぎが出る（モスキートノイズ）。
+%[text] 低画質（品質 5）の JPEG で圧縮すると， $ 8\\times8 $ ブロックの境界が見える（ブロックノイズ）。
 %[text] 画像は教科書のサンプル画像 msipimg01.tif（海岸）を $ 256\\times256 $ 画素のグレースケールに縮小して使う（共通関数 `vie.msipimg` ）。なめらかな空ではブロックの階段状の境界が，水平線と桟橋の輪郭の上下には縞状の揺らぎがはっきり見える（石像の顔 msipimg05，建物 msipimg04，路面 msipimg06 などと比べて選んだ）。
 X1 = im2double(vie.msipimg(1, 256, "gray"));   % 海岸（256×256）
 jpgfile = fullfile(tmpfolder, "beach_q5.jpg");
 imwrite(X1, jpgfile, "Quality", 5);
 Xj = im2double(imread(jpgfile));
 imwrite(imresize(Xj(1:64,129:192), 4, "nearest"), fullfile(resfolder,"vie-10-blocknoise.png"))   % 空の部分
-imwrite(imresize(Xj(33:96,65:128), 4, "nearest"), fullfile(resfolder,"vie-10-mosquito.png"))     % 水平線と桟橋の輪郭付近
 psnrJ = psnr(Xj, X1)
+%[text] モスキートノイズは，平坦な面に鋭いエッジがある画像で見やすい（写真では細かな質感に紛れる）。msipimg04（建物）を 2 値化した人工的な画像（平坦な 2 階調と鋭い輪郭）を中程度の品質 20 で圧縮し，アーチの頂部を拡大する。平坦な面にはブロック境界がほとんど出ず，輪郭に沿って波打ち（モスキートノイズ）が現れる。
+X4 = im2double(vie.msipimg(4, 256, "gray"));
+B4 = 0.2 + 0.6*double(imgaussfilt(X4, 1.5) > 0.45);   % 2 値化した人工画像
+jpgfile4 = fullfile(tmpfolder, "arch_q20.jpg");
+imwrite(B4, jpgfile4, "Quality", 20);
+B4j = im2double(imread(jpgfile4));
+imwrite(imresize(B4j(25:72,96:143), 4, "nearest"), fullfile(resfolder,"vie-10-mosquito.png"))     % 中央のアーチの頂部
 %%
 %[text] ## JPEG と JPEG2000（同程度のファイルサイズ）
 %[text] msipimg03.tif（マカロン，カラー $ 512\\times512 $ 画素）を約 12 kB になるよう JPEG と JPEG2000 で圧縮して比べる。なめらかなマカロンの表面で JPEG のブロックノイズが目立つ（花束 msipimg02，石像の顔 msipimg05 と比べて選んだ）。
