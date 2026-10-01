@@ -90,7 +90,7 @@ def msipimg(idx: int, size=None, mode: str = "rgb") -> np.ndarray:
     アンチエイリアス）で縮小する（スカラーなら正方形）．
     MATLAB 版とは縮小の実装が異なるので，画素値はわずかに異なる．
     """
-    from skimage import io
+    from PIL import Image
     from skimage.transform import resize
 
     name = f"msipimg{idx:02d}.tif"
@@ -100,10 +100,10 @@ def msipimg(idx: int, size=None, mode: str = "rgb") -> np.ndarray:
             urllib.request.urlretrieve(REPO_RAW + "data/" + name, path)
         except OSError:
             urllib.request.urlretrieve(MSIPWORKM_RAW + "data/" + name, path)
-    X = io.imread(path)
-    if X.ndim == 3 and X.shape[2] == 4:   # アルファチャネルがあれば落とす
-        X = X[:, :, :3]
-    X = X.astype(np.float64)
+    # LZW 圧縮の TIFF なので Pillow で読む（scikit-image / tifffile では imagecodecs が別に要る）．
+    # convert("RGB") でアルファチャネルがあれば落とす
+    with Image.open(path) as im:
+        X = np.asarray(im.convert("RGB"), dtype=np.float64)
     if mode == "gray":
         X = X @ np.array([0.299, 0.587, 0.114])
     if size is not None:
