@@ -23,7 +23,7 @@ Yd = X(1:2:end, 1:2:end);
 imwrite(Yd, fullfile(resfolder,"vie-08-dec.png"))
 %%
 %[text] ## 平均による縮小
-%[text] 前回スライドの例： $ 2\\times2 $ ブロックの平均値を出力する（教科書の例「ブロック平均」）。
+%[text] 例： $ 2\\times2 $ ブロックの平均値を出力する（教科書の例「ブロック平均」）。
 x4 = [0 2 4 4; 4 6 4 4; 0 6 4 4; 2 4 6 6]
 y2 = (x4(1:2:end,1:2:end) + x4(2:2:end,1:2:end) + x4(1:2:end,2:2:end) + x4(2:2:end,2:2:end))/4
 vie.savetex("vie-08-x4",  vie.arr2tex(x4,"%d"));
@@ -121,7 +121,7 @@ exportgraphics(gcf, fullfile(resfolder,"vie-08-sampling.png"), "Resolution", 300
 %[text] ## 多次元の標本化とスペクトル
 %[text] 二次元では標本化行列 $ \\boldsymbol{L}=\\mathrm{diag}(\\Delta\_\\mathrm{v},\\Delta\_\\mathrm{h}) $ の格子で標本化する。サンプル列のフーリエ変換は
 %[text] $ \\tilde{x}(\\boldsymbol{\\nu})=\\frac{1}{|\\det(\\boldsymbol{L})|}\\sum\_{\\boldsymbol{m}\\in\\mathbb{Z}^D}\\tilde{u}(\\boldsymbol{\\nu}-2\\pi\\boldsymbol{L}^{-\\top}\\boldsymbol{m}) $
-%[text] となり，周期構造行列 $ 2\\pi\\boldsymbol{L}^{-\\top} $ の周期性をもつ（教科書 4.1.3 項）。前回の演習課題（8）－2 の図の見せ方にならい，標本化格子と，標本化後の周波数スペクトルのサポート（台）を描く。垂直の間隔を水平の 2 倍にとる。
+%[text] となり，周期構造行列 $ 2\\pi\\boldsymbol{L}^{-\\top} $ の周期性をもつ（教科書 4.1.3 項）。標本化格子と，標本化後の周波数スペクトルのサポート（台）を描く。垂直の間隔を水平の 2 倍にとる。
 Dv = 2; Dh = 1;                                % 標本化間隔（垂直・水平）
 L = diag([Dv Dh])                              % 標本化行列（第 1 次元が垂直）
 detL = abs(det(L))                             % 基本平行多面体 FPD(L) の面積

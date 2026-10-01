@@ -96,7 +96,7 @@ vie.savetex("vie-07-NN-set",  strjoin(cols, ","));
 vie.savetex("vie-07-NN-card", sprintf("%d", cardN));
 %%
 %[text] ## 例題：二次元配列の DSFT と DFT
-%[text] 前回スライドの例題。 $ x[0,0]=x[1,0]=x[0,1]=x[1,1]=1 $ ，その他 0。DSFT は
+%[text] $ x[0,0]=x[1,0]=x[0,1]=x[1,1]=1 $ ，その他 0。DSFT は
 %[text]{"align":"center"} $ X(\\mathrm{e}^{\\mathrm{j}\\boldsymbol{\\omega}^\\top})=(1+\\mathrm{e}^{-\\mathrm{j}\\omega\_1})(1+\\mathrm{e}^{-\\mathrm{j}\\omega\_2})=4\\cos\\frac{\\omega\_1}{2}\\cos\\frac{\\omega\_2}{2}\\mathrm{e}^{-\\mathrm{j}(\\omega\_1+\\omega\_2)/2} $
 %[text] 周期構造行列 $ \\boldsymbol{N}=\\mathrm{diag}(2,2) $ の DFT は DSFT を $ \\omega\_d=\\pi k\_d $ で標本化したもの。行の添え字が $ k\_1 $ ，列の添え字が $ k\_2 $ 。
 x22 = ones(2);
@@ -116,7 +116,7 @@ X1sep = fft(x22, [], 1)                        % X^{1}[k1; n2]（各列の DFT�
 Xsep  = fft(X1sep, [], 2)                      % X[k1, k2]（各行の DFT）
 assert(max(abs(Xsep - X22), [], "all") < 1e-12)
 vie.savetex("vie-07-ex-X1", vie.arr2tex(real(X1sep),"%g"));
-%[text] 振幅スペクトル $ |X(\\mathrm{e}^{\\mathrm{j}\\boldsymbol{\\omega}^\\top})| $ の曲面と，DFT の標本 $ |X[k\_1,k\_2]| $ （ $ \\boldsymbol{\\omega}=\\pi\\boldsymbol{k} $ ）を重ねて描く（2023 年度の演習の `fmesh` の図を参考）。
+%[text] 振幅スペクトル $ |X(\\mathrm{e}^{\\mathrm{j}\\boldsymbol{\\omega}^\\top})| $ の曲面と，DFT の標本 $ |X[k\_1,k\_2]| $ （ $ \\boldsymbol{\\omega}=\\pi\\boldsymbol{k} $ ）を重ねて描く。
 [W2, W1] = meshgrid(linspace(-pi, pi, 41));    % 横軸 ω2，縦軸 ω1
 figMag = figure("Position", [100 100 440 360]);   % 小さく貼るので専用の図にする
 mesh(W2, W1, abs(dsft(W1, W2)), "FaceColor", "none"), hold on

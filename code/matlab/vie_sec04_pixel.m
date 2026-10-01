@@ -136,7 +136,7 @@ vie.savetex("vie-04-mm-y",    vie.arr2tex(ymm,"%.4f"));
 %%
 %[text] ## べき乗則変換
 %[text] 実数 $ x\\in[0,1] $ では $ y=x^\\gamma $ ，整数 $ x\\in\\{0,1,\\ldots,L-1\\} $ では $ y=(L-1)\\left(\\frac{x}{L-1}\\right)^\\gamma $ 。 $ \\gamma<1 $ で明るく， $ \\gamma>1 $ で暗くなる。
-%[text] （スライドでは教科書の図 2.3 を使う。この曲線群の図 vie-04-power-curves.png は前回スライドの図に相当するもので，参考として残す。）
+%[text] （スライドでは教科書の図 2.3 を使う。この曲線群の図 vie-04-power-curves.png は参考として残す。）
 gammas = [0.04 0.1 0.2 0.4 0.67 1 1.5 2.5 5 10 25];
 clf
 plot(xx, xx'.^gammas, "LineWidth", 1.5)   % 各列が一つの γ に対応
@@ -267,7 +267,7 @@ calc1 = sprintf("$\\phi(1)=\\msipround{%d\\times\\left(\\frac{%d}{%d}+\\frac{%d}
 calcL = sprintf("$\\phi(%d)=\\msipround{%d\\times\\frac{%d}{%d}}=\\msipround{%.4f}=%d$", ...
     L-1, L-1, sum(hx), N, cum(end), phi(end));
 vie.savetex("vie-04-he-calc", strjoin([calc0, calc1, "$\ldots$", calcL], "，\ "));
-%[text] 均等化の前後の度数を棒グラフにする（前回演習課題（4）－2 の解説の図を参考に，縦軸をそろえる）。
+%[text] 均等化の前後の度数を棒グラフにする（縦軸をそろえる）。
 hmax = 15;
 [fig, ax] = slidefig(5.6, 4.0);                   % スライド上の幅 42 mm に近い大きさ
 histbar(ax, 0:L-1, hx, hmax, cMain, "画素値 {\itx}", "度数 {\ith}_{\itx}")
@@ -279,7 +279,7 @@ exportgraphics(fig, fullfile(resfolder,"vie-04-he-hy.png"), "Resolution", 300)
 close(fig)
 %%
 %[text] ## カラー画像処理：明るさの調整
-%[text] マカロン msipimg03（ $ 256\\times256 $ ）を明るくする。RGB 空間では R, G, B それぞれに $ \\gamma=0.4 $ のべき乗則変換を施す。HSV 空間では明度 V だけに施し，色相 H と彩度 S は保つ（前回スライドの HSI 空間処理に相当）。
+%[text] マカロン msipimg03（ $ 256\\times256 $ ）を明るくする。RGB 空間では R, G, B それぞれに $ \\gamma=0.4 $ のべき乗則変換を施す。HSV 空間では明度 V だけに施し，色相 H と彩度 S は保つ。
 P = im2double(vie.msipimg(3, 256));
 P = min(max(P, 0), 1);                        % 縮小時のオーバーシュートを [0,1] に収める
 Prgb = P.^0.4;
@@ -345,7 +345,7 @@ imwrite(G,   fullfile(resfolder,"vie-04-pseudo-org.png"))
 imwrite(Yps, fullfile(resfolder,"vie-04-pseudo-out.png"))
 %%
 %[text] ## 例題：擬似カラー
-%[text] 前回スライドの例題。 $ 4\\times4 $ 配列 $ x\\in\\{0,1,2,3\\} $ を変換テーブル（R, G, B 各 2 bit）で擬似カラー表示する。変換テーブルの行が画素値 $ x=0,1,2,3 $ に対応する。
+%[text] $ 4\\times4 $ 配列 $ x\\in\\{0,1,2,3\\} $ を変換テーブル（R, G, B 各 2 bit）で擬似カラー表示する。変換テーブルの行が画素値 $ x=0,1,2,3 $ に対応する。
 xq = [0 2 2 3; 1 1 1 2; 1 1 1 1; 1 1 1 0];
 lut = [3 0 0; 0 3 0; 0 0 3; 3 0 3]                % 行 x=0,1,2,3 の (R,G,B)
 lutName = ["赤","緑","青","マゼンタ"];            % 各行の色の名前

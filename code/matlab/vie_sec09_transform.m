@@ -3,7 +3,7 @@
 %[text] 動作確認： MATLAB R2026b
 %[text] 第9回のスライド（vie2026-09）で使う図と数値を作る。自然画像の隣接画素の相関，信号変換 $ \\mathbf{y}=\\mathbf{A}\\mathbf{x} $ と基底ベクトル $ \\mathbf{b}\_m $ （ $ \\mathbf{B}=\\mathbf{A}^{-1} $ の列），基底画像，離散コサイン変換（DCT），離散ハール変換（DHT），ブロック処理，ハール変換のフィルタバンク表現を扱う。
 %[text] 記号は教科書（村松正吾『多次元信号・画像処理の基礎と展開』）に合わせる。教科書の例・例題（例「分散共分散行列」，例題「二次元DCT」「二次元DHT」「ブロック処理」）は，ここで計算し直して教科書の解答と一致することを確かめてから，スライドに書き出す。図の配色は MSIP Lab のロゴの 3 色（緑 #008855，青 #2E75B6，橙 #C55A11）と灰色を使う。
-%[text] $ 2\\times2 $ の数値例では，前回スライドと同じくハール変換（ $ \\pi/4 $ 回転）行列
+%[text] $ 2\\times2 $ の数値例では，ハール変換（ $ \\pi/4 $ 回転）行列
 %[text]{"align":"center"} $ \\mathbf{A}=\\frac{1}{\\sqrt{2}}\\begin{pmatrix}1&1\\\\-1&1\\end{pmatrix} $
 %[text] を用いる（教科書の $ \\mathbf{H}\_2=\\mathbf{C}\_2 $ とは第 2 行の符号だけが異なる）。
 %[text:tableOfContents]{"heading":"目次"}
@@ -101,7 +101,7 @@ M = 4;
 am = [1/sqrt(M); sqrt(2/M)*ones(M-1,1)];        % α_m
 C4 = am .* cos(mm.*(2*nn+1)*pi/(2*M))
 err_dctmtx = norm(C4 - dctmtx(M))
-%[text] 教科書の例題： $ 4\\times4 $ 配列の二次元 DCT（分離処理 $ \\mathbf{Y}=\\mathbf{C}\_4\\mathbf{X}\\mathbf{C}\_4^\\top $ ）。縦方向に $ \\mathbf{U}=\\mathbf{C}\_4\\mathbf{X} $ ，続いて横方向に $ \\mathbf{Y}=\\mathbf{U}\\mathbf{C}\_4^\\top $ と 2 段階で計算してもよい（前回の演習課題の解説と同じ手順）。
+%[text] 教科書の例題： $ 4\\times4 $ 配列の二次元 DCT（分離処理 $ \\mathbf{Y}=\\mathbf{C}\_4\\mathbf{X}\\mathbf{C}\_4^\\top $ ）。縦方向に $ \\mathbf{U}=\\mathbf{C}\_4\\mathbf{X} $ ，続いて横方向に $ \\mathbf{Y}=\\mathbf{U}\\mathbf{C}\_4^\\top $ と 2 段階で計算してもよい。
 X4 = [4 4 6 4; 4 6 4 2; 6 4 2 4; 4 2 4 4];
 U4 = C4*X4;                                     % 縦方向の変換
 Y4 = U4*C4.'
@@ -207,7 +207,7 @@ imwrite(min(max(Xk,0),1), fullfile(resfolder,"vie-09-bdct-rec.png"))
 vie.savetex("vie-09-psnr10", sprintf("%.1f", psnr10));
 %%
 %[text] ## ハール変換による信号の解析と合成
-%[text] 前回スライドの例。 $ x[n]=(3,1,3,1,5,3) $ に対し，隣同士を足して 1/2 倍（縮小近似成分），左隣を引いて 1/2 倍（縮小詳細成分），2 点に 1 点を残す。
+%[text] $ x[n]=(3,1,3,1,5,3) $ に対し，隣同士を足して 1/2 倍（縮小近似成分），左隣を引いて 1/2 倍（縮小詳細成分），2 点に 1 点を残す。
 x = [3 1 3 1 5 3];
 s = x(2:end) + x(1:end-1)                       % 隣同士を足す
 d = x(2:end) - x(1:end-1)                       % 左隣を引く

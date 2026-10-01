@@ -14,7 +14,7 @@ cWarm = [197 90 17]/255;                            % 橙 #C55A11（暖色系）
 cGray = [0.6 0.6 0.6];                              % 灰色
 %%
 %[text] ## 二次元畳み込みの計算例
-%[text] 前回スライドの例。入力 $ 3\\times3 $ ，インパルス応答 $ 3\\times3 $ （中心が原点， $ \\mathcal{N}\_\\mathrm{h}=\\{-1,0,1\\}^2 $ ）。線形畳み込み
+%[text] 入力 $ 3\\times3 $ ，インパルス応答 $ 3\\times3 $ （中心が原点， $ \\mathcal{N}\_\\mathrm{h}=\\{-1,0,1\\}^2 $ ）。線形畳み込み
 %[text]{"align":"center"} $ y[\\boldsymbol{n}]=\\sum\_{\\boldsymbol{m}\\in\\mathcal{N}\_x}x[\\boldsymbol{m}]h[\\boldsymbol{n}-\\boldsymbol{m}] $
 %[text] の出力は $ 5\\times5 $ に広がる（ `conv2` の `full` ）。
 X2 = [1 2 3; 4 5 6; 7 8 9];
@@ -102,7 +102,7 @@ vie.savetex("vie-06-sep-K2", strjoin(string(K.^2)," & "));
 vie.savetex("vie-06-sep-2K", strjoin(string(2*K)," & "));
 %%
 %[text] ## 有限長信号の畳み込み
-%[text] 前回スライドの例。 $ x[n]=(1,2,4,2) $ （ $ n=0,1,2,3 $ ）， $ h[n]=(\\frac14,\\frac12,\\frac14) $ （ $ n=-1,0,1 $ ，非因果的）。出力のサポートはミンコフスキー和 $ \\{0,1,2,3\\}+\\{-1,0,1\\}=\\{-1,0,\\ldots,4\\} $ で，6 点に増える。
+%[text] $ x[n]=(1,2,4,2) $ （ $ n=0,1,2,3 $ ）， $ h[n]=(\\frac14,\\frac12,\\frac14) $ （ $ n=-1,0,1 $ ，非因果的）。出力のサポートはミンコフスキー和 $ \\{0,1,2,3\\}+\\{-1,0,1\\}=\\{-1,0,\\ldots,4\\} $ で，6 点に増える。
 x1 = [1 2 4 2];   nx1 = 0:3;
 h1d = [1/4 1/2 1/4]; nh1 = -1:1;
 y1 = conv(x1, h1d)                                  % n = -1,0,1,2,3,4
@@ -214,7 +214,7 @@ for n = [0 3]
     end
     vie.savetex("vie-06-ws-y"+n, strjoin(terms,"+") + "=" + sprintf("%g", yW(n+1)));
 end
-%[text] 図：WS 拡張した信号（灰色が拡張した点），インパルス応答，出力。前回演習課題（6）の図（対称の中心の矢印）を参考にした。
+%[text] 図：WS 拡張した信号（灰色が拡張した点），インパルス応答，出力。
 fig = figure("Units","centimeters","Position",[2 2 11.5 3.3]);
 tl = tiledlayout(fig,1,8,"TileSpacing","loose","Padding","compact");
 ax = nexttile(tl,[1 3]);
@@ -357,7 +357,7 @@ norm(Tsh)                                           % 2-ノルム（最大特異
 vie.savetex("vie-06-sn-shift", sprintf("%g", snShift));
 %%
 %[text] ## 対称畳み込みの行列表現
-%[text] 前回スライドの例。 $ 2\\times3 $ 配列 $ \\mathsf{x} $ を WS 対称拡張（周期的にも延長）して $ \\mathsf{x}\_\\mathrm{pad} $ とし，インパルス応答 $ h[\\boldsymbol{m}] $ （ $ \\boldsymbol{m}\\in\\{0,1\\}^2 $ ， $ h[0,0]=h[1,0]=1,\\ h[0,1]=h[1,1]=-1 $ ）と畳み込んで $ \\mathsf{y} $ を得る。
+%[text] $ 2\\times3 $ 配列 $ \\mathsf{x} $ を WS 対称拡張（周期的にも延長）して $ \\mathsf{x}\_\\mathrm{pad} $ とし，インパルス応答 $ h[\\boldsymbol{m}] $ （ $ \\boldsymbol{m}\\in\\{0,1\\}^2 $ ， $ h[0,0]=h[1,0]=1,\\ h[0,1]=h[1,1]=-1 $ ）と畳み込んで $ \\mathsf{y} $ を得る。
 U = [0 2 4; 1 3 5];                                 % 入力 x
 Hk = [1 -1; 1 -1];                                  % 行が m1，列が m2
 wsidx = @(n,N) N-1 - abs(mod(n, 2*(N-1)) - (N-1));  % WS 対称＋周期の添え字（0 始まり）

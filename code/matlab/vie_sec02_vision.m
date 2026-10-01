@@ -80,7 +80,7 @@ vie.savetex("vie-02-retina", sprintf("%.2f",h));
 %%
 %[text] ## 視力と解像度
 %[text] **視力**は，隣接する 2 点を弁別できる最小視角の逆数である（視力 = 1/視角〔分〕）。視力 $ V $ の人は $ 1/V $ 分（1 分 = 1/60 度）の視角を見分けられる。
-%[text] 画面の高さを $ h $ とし，画面高の 3 倍の距離 $ d=3h $ からテレビを見る（2025 年度の演習課題（2）-2 と同じ設定）。画面の上端と下端が目につくる視角 $ \\theta $ は，直角三角形 2 つに分けて
+%[text] 画面の高さを $ h $ とし，画面高の 3 倍の距離 $ d=3h $ からテレビを見る。画面の上端と下端が目につくる視角 $ \\theta $ は，直角三角形 2 つに分けて
 %[text]{"align":"center"} $ \\theta = 2\\tan^{-1}\\frac{h/2}{d} = 2\\tan^{-1}\\frac{h/2}{3h} = 2\\tan^{-1}\\frac{1}{6} $
 dh = 3;                           % 視距離と画面高の比 d/h
 theta = 2*atand(0.5/dh)           % 視角 [度]
@@ -92,7 +92,7 @@ nlines = arcmin/(1/V)             % 走査線数の目安 [本]
 vie.savetex("vie-02-acuity-deg",   sprintf("%.1f",theta));
 vie.savetex("vie-02-acuity-min",   sprintf("%.0f",arcmin));
 vie.savetex("vie-02-acuity-lines", sprintf("%.0f",nlines));
-%[text] 位置関係を縮尺どおりに描く（2025 年度の演習課題（2）-2 の図を参考）。画面の高さを $ h=1 $ とし，目の節点（光線が交わる点）を画面から $ d=3h $ の位置に置く。
+%[text] 位置関係を縮尺どおりに描く。画面の高さを $ h=1 $ とし，目の節点（光線が交わる点）を画面から $ d=3h $ の位置に置く。
 figure("Position",[100 100 600 230],"Color","w")
 hold on
 th = theta*pi/180;                            % 視角 [rad]

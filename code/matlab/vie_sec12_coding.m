@@ -112,7 +112,7 @@ imwrite(uint8(X8), fullfile(resfolder,"vie-12-org.png"))
 dPSNR = round(psnrPCM(1),2) - round(psnrPCM(2),2)
 vie.savetex("vie-12-pcm-dpsnr", sprintf("%.2f", dPSNR));
 %%
-%[text] ## PSNR の数値例（前回スライドの例題）
+%[text] ## PSNR の数値例
 %[text] 2 bit（ピーク値 $ 2^2-1=3 $ ）の $ 4\\times4 $ 配列どうしの PSNR。差の二乗のうち零でないものを，行ごとに左から並べて示す。
 Xa = [0 1 1 0; 1 2 3 1; 1 3 2 1; 0 1 1 0];
 Xb = [0 1 1 1; 1 3 0 1; 1 2 2 1; 2 1 1 0];
@@ -168,7 +168,7 @@ exportgraphics(fig, fullfile(resfolder,"vie-12-hist.png"), "Resolution", 300)
 close(fig)
 %%
 %[text] ## 動き補償予測の効果（ブロックマッチングによる動き推定）
-%[text] 実際の動画の連続する 2 フレームを使う（前回スライドの映像。スライドの動画 anim-11-motion-a と同じもので，VieWork の data に置いた）。カメラが横に動いているので，内容は水平に動き，手前の木と奥の家では動きの大きさが違う。
+%[text] 実際の動画の連続する 2 フレームを使う（スライドの動画 anim-11-motion-a と同じもので，VieWork の data に置いた）。カメラが横に動いているので，内容は水平に動き，手前の木と奥の家では動きの大きさが違う。
 %[text] 前フレームを復号済み参照フレーム $ \\check{\\msiptensor{x}}\_{m\_\\mathrm{t}} $ とみなし，現フレーム $ \\msiptensor{x}\_{n\_\\mathrm{t}} $ から探索範囲の余白を除いた $ 304\\times464 $ 画素を処理する。
 datfolder = vie.prjfolders();
 Xref = double(rgb2gray(imread(fullfile(datfolder, "anim-11-motion-a-f0.jpg"))));   % 前フレーム（参照フレーム）

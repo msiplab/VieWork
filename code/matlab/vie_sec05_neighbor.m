@@ -15,7 +15,7 @@ clrMain = [0 136 85]/255;                      % メイン（緑）
 clrWarm = [197 90 17]/255;                     % 暖色系（橙）
 %%
 %[text] ## 数値例の配列
-%[text] 教科書の例題と前回スライドで共通に使う $ 3\\times 4 $ 配列。周囲の値はすべて零値と仮定する。
+%[text] 教科書の例題で使う $ 3\\times 4 $ 配列。周囲の値はすべて零値と仮定する。
 X = [18 9 9 9; 27 9 9 9; 36 9 9 9]
 vie.savetex("vie-05-x", vie.arr2tex(X,"%d"));
 %[text] スライドでは配列を TikZ の格子で描く。格子に置く数値も手で書かず，ここから `\node at (列,-行) {$値$};` の形で書き出す（ローカル関数 `arr2nodes`，左上の要素が原点）。
@@ -101,7 +101,7 @@ vie.savetex("vie-05-psnr-gnbox", sprintf("%.1f",psnrG(2)));
 vie.savetex("vie-05-psnr-gngau", sprintf("%.1f",psnrG(3)));
 %%
 %[text] ## 中央値フィルタ
-%[text] 前回スライドの例： $ 3\\times 3 $ 領域の画素値を昇順に並べ，5 番目（中央， $ K=(9+1)/2 $ ）の値で置き換える。外れ値 100 の影響を受けない。
+%[text] $ 3\\times 3 $ 領域の画素値を昇順に並べ，5 番目（中央， $ K=(9+1)/2 $ ）の値で置き換える。外れ値 100 の影響を受けない。
 B = [10 20 20; 20 15 20; 20 25 100]
 vie.savetex("vie-05-med-b-nodes", arr2nodes(B,"%d"));
 sorted = sort(B(:))'
@@ -220,7 +220,7 @@ imwrite(min(max(0.5 + 2*L8,0),1), fullfile(resfolder,"vie-05-moon-lap8.png"))
 %[text] $ \\mathsf{y}=\\mathsf{x}-\\nabla^2\\mathsf{x} $ 。カーネルは恒等変換からラプラシアンを引いたもの。
 fus4 = [0 0 0; 0 1 0; 0 0 0] - flap4
 fus8 = [0 0 0; 0 1 0; 0 0 0] - flap8
-%[text] 前回の演習で使った `fspecial("unsharp",0)` は 4 近傍のカーネルに一致する。
+%[text] `fspecial("unsharp",0)` は 4 近傍のカーネルに一致する。
 assert(isequal(fus4, fspecial("unsharp",0)))
 %[text] 数値例の配列 $ \\mathsf{x} $ に 4 近傍アンシャープマスクを施す（教科書 例題「4近傍アンシャープマスク」）。入力から例題「4近傍ラプラシアン」の結果を引いても，カーネル `fus4` で近傍処理しても同じ。
 Yus = imfilter(X, fus4)
@@ -228,7 +228,7 @@ assert(isequal(Yus, X - Ylap))
 YusBook = [54 9 18 27; 72 -9 9 18; 144 -9 18 27];
 assert(isequal(Yus, YusBook), "4近傍アンシャープマスク：教科書の解答と一致しない")
 vie.savetex("vie-05-us", vie.arr2tex(Yus,"%d"));
-%[text] 前回の演習課題（5-2）の解答にならい，画素毎に「中央の 5 倍から上・左・右・下の 4 近傍の和を引く」形で $ y[1,1] $ を示す。
+%[text] 画素毎に「中央の 5 倍から上・左・右・下の 4 近傍の和を引く」形で $ y[1,1] $ を示す。
 W = win(1,1);
 e = sprintf("%d\\cdot%s", fus4(2,2), numtex(W(2,2))) + "-(" + sumexpr([W(1,2) W(2,1) W(2,3) W(3,2)]) + ")"
 vie.savetex("vie-05-us-e11", e);

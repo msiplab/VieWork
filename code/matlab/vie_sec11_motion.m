@@ -18,7 +18,7 @@ ccool = [46 117 182]/255;   % 寒色系（青）#2E75B6：第 2 系統（信号�
 cwarm = [197 90 17]/255;    % 暖色系（橙）#C55A11：注目させたい箇所
 cgray = [0.6 0.6 0.6];      % 補助線（灰）
 %%
-%[text] ## 標本化によるスペクトルの周期化（前回スライドの図を踏襲）
+%[text] ## 標本化によるスペクトルの周期化
 %[text] 斜めに傾いた細長いスペクトル $ \\tilde{u}(\\boldsymbol{\\nu}) $ （円形とは限らない）を，標本化行列 $ \\boldsymbol{L}=\\mathrm{diag}(\\Delta\_\\mathrm{v},\\Delta\_\\mathrm{h}) $ の直交標本化で周期化する（教科書 4.1.3 項「FT と DSFT の関係」）。
 %[text] $ \\tilde{x}(\\boldsymbol{\\nu})=\\frac{1}{|\\det(\\boldsymbol{L})|}\\sum\_{\\boldsymbol{m}\\in\\mathbb{Z}^2}\\tilde{u}(\\boldsymbol{\\nu}-2\\pi\\boldsymbol{L}^{-\\top}\\boldsymbol{m}) $ 。図では $ \\Delta\_\\mathrm{v}=\\Delta\_\\mathrm{h}=1 $ とし，周期 $ 2\\pi $ ごとに複製が並ぶ。
 nuRange = 3*pi; M = 481;
@@ -113,7 +113,7 @@ end
 %[text] 速度 $ \\boldsymbol{v}=(v\_\\mathrm{v}\\ v\_\\mathrm{h})^\\top $ で動く画像のスペクトルは
 %[text]{"align":"center"} $ \\tilde{x}(\\nu\_\\mathrm{v},\\nu\_\\mathrm{h},\\nu\_\\mathrm{t})=\\tilde{x}\_0(\\nu\_\\mathrm{v},\\nu\_\\mathrm{h})\\cdot 2\\pi\\,\\delta(\\nu\_\\mathrm{v}v\_\\mathrm{v}+\\nu\_\\mathrm{h}v\_\\mathrm{h}+\\nu\_\\mathrm{t}) $
 %[text] となり，法線ベクトル $ (v\_\\mathrm{v}\\ v\_\\mathrm{h}\\ 1)^\\top $ と直交する平面の上に集まる。静止画像 $ x\_0 $ のスペクトルが $ (\\nu\_\\mathrm{v},\\nu\_\\mathrm{h})=(\\pm1,\\pm2) $ のインパルスからなるとき，垂直方向に速度 $ v\_\\mathrm{v} $ で動かすと，各インパルスは $ \\nu\_\\mathrm{t} $ 方向に $ \\nu\_\\mathrm{t}=-v\_\\mathrm{v}\\nu\_\\mathrm{v} $ の位置へ移る（ $ v\_\\mathrm{h}=0 $ なので $ \\nu\_\\mathrm{h} $ には依らない）。
-%[text] 図の見せ方は，前回の演習・試験用の図（3 次元の動画像スペクトル）を参考にした。軸は $ \\nu\_\\mathrm{v} $ を上， $ \\nu\_\\mathrm{t} $ を右手前， $ \\nu\_\\mathrm{h} $ を右奥にとる。青の点がスペクトル，緑の面がスペクトルの乗る平面，橙の矢印が法線ベクトルである。
+%[text] 軸は $ \\nu\_\\mathrm{v} $ を上， $ \\nu\_\\mathrm{t} $ を右手前， $ \\nu\_\\mathrm{h} $ を右奥にとる。青の点がスペクトル，緑の面がスペクトルの乗る平面，橙の矢印が法線ベクトルである。
 nuv0 = [1 1 -1 -1];                         % 静止画像のインパルスの垂直周波数 ν_v
 nuh0 = [2 -2 2 -2];                         % 同じく水平周波数 ν_h
 vh = 0;                                     % 水平速度（垂直移動の例なので 0）
@@ -145,7 +145,7 @@ vie.savetex("vie-11-ex-nutp", sprintf("%d", nutp));
 vie.savetex("vie-11-ex-nutm", sprintf("%d", nutm));
 vie.savetex("vie-11-ex-check", sprintf("1\\cdot%d+(%d)=%d", vv, nutp, 1*vv + nutp));
 %%
-%[text] ## ブロックマッチング：前回スライドの例題
+%[text] ## ブロックマッチングの例題
 %[text] $ 2\\times2 $ の対象ブロック（現フレーム $ \\mathsf{x}\_{n\_\\mathrm{t}} $ ）に最も近いブロックを，参照フレーム $ \\mathsf{x}\_{m\_\\mathrm{t}} $ の $ 4\\times4 $ の探索窓から，差の絶対値和（SAD）を評価式とする全探索で求める。探索範囲は $ \\mathcal{N}\_\\mathrm{w}=\\{-1,0,1\\}^2 $ である。
 %[text] 探索窓の中央の $ 2\\times2 $ （ `win(2:3,2:3)` ）が，対象ブロックと同じ位置（ $ \\boldsymbol{m}=\\mathbf{0} $ ）である。変位 $ \\boldsymbol{m}=[m\_\\mathrm{v}\\ \\ m\_\\mathrm{h}]^\\top $ の候補は `win(2+mv:3+mv, 2+mh:3+mh)` で，教科書の $ x\_{m\_\\mathrm{t}}[\\boldsymbol{n}+\\boldsymbol{m}] $ に当たる。
 blk = [1 1; 1 1];                            % 対象ブロック（現フレーム）
@@ -166,11 +166,11 @@ SSD
 [sadmin, idx] = min(SAD(:));
 [iv, ih] = ind2sub(size(SAD), idx);
 mhat = [mvs(iv) mhs(ih)]                     % 推定した動きベクトル [m_v m_h]（垂直，水平）
-%[text] 演習課題の解説と同じく，一つの変位について SAD を差の絶対値の和に展開して書いておく。ここでは $ \\boldsymbol{m}=\\mathbf{0} $ （動きなし）の場合を示す。
+%[text] 一つの変位について SAD を差の絶対値の和に展開して書いておく。ここでは $ \\boldsymbol{m}=\\mathbf{0} $ （動きなし）の場合を示す。
 cand0 = win(2:3, 2:3);
 terms = compose("|%d-%d|", [reshape(blk.',1,[]); reshape(cand0.',1,[])].');
 sadexpr = strjoin(terms, "+") + "=" + sprintf("%d", sum(abs(blk - cand0), "all"))
-%[text] スライドの表（対象ブロックと探索窓）は，前回の演習課題（11）の図と同じ見せ方で TikZ で描く。数値はここから `\def` のマクロとして渡し，スライドでは書き写さない。
+%[text] スライドの表（対象ブロックと探索窓）は TikZ で描く。数値はここから `\def` のマクロとして渡し，スライドでは書き写さない。
 vie.savetex("vie-11-sad", vie.arr2tex(SAD,"%d"));
 vie.savetex("vie-11-ssd", vie.arr2tex(SSD,"%d"));
 vie.savetex("vie-11-sad-min", sprintf("%d", sadmin));
@@ -264,7 +264,7 @@ vie.savetex("vie-11-poc-shift", intvec2tex(lag));
 vie.savetex("vie-11-poc-n0", intvec2tex(n0));
 vie.savetex("vie-11-poc-peak", sprintf("%.2f", peak));
 %%
-%[text] ## 見かけ上の動き：光源変化の影響（前回スライドの図を踏襲）
+%[text] ## 見かけ上の動き：光源変化の影響
 %[text] 動かない球を，フレーム $ n\_\\mathrm{t}-1 $ では左上から，フレーム $ n\_\\mathrm{t} $ では右上から照らす。拡散反射（ランバート反射）の明るさ $ a+k\\max(0,\\boldsymbol{\\eta}^\\top\\boldsymbol{\\ell}) $ （ $ \\boldsymbol{\\eta} $ ：面の法線， $ \\boldsymbol{\\ell} $ ：光源の向き）で陰影をつけ，床には光と反対側に影を落とす。物体は動いていないのに，明るい面と影が入れ替わり，動いたように見える。
 Ms = 200;
 [xs, ys] = meshgrid(linspace(-1.3, 1.3, Ms), linspace(1.3, -1.3, Ms));   % 横：右が正，縦：上が正（縦横同じ縮尺）

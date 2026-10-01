@@ -191,7 +191,7 @@ imwrite(dimg, fullfile(resfolder,"vie-10-delta.png"))
 pimg = conv2(dimg, psf, "same"); imwrite(pimg/max(pimg(:)), fullfile(resfolder,"vie-10-psf.png"))
 %%
 %[text] ## 観測ノイズ（AWGN）
-%[text] 前回スライドの例：3 段階の明るさの正方形に平均 0，分散 $ \\sigma\_\\mathrm{w}^2=0.001 $ の白色ガウスノイズを加える。ヒストグラムの各ピークが正規分布に広がる。（スライドでは教科書の図 8.1 を使うので，この 3 枚の出力は現在使っていない。）
+%[text] 3 段階の明るさの正方形に平均 0，分散 $ \\sigma\_\\mathrm{w}^2=0.001 $ の白色ガウスノイズを加える。ヒストグラムの各ピークが正規分布に広がる。（スライドでは教科書の図 8.1 を使うので，この 3 枚の出力は現在使っていない。）
 rng(0)
 U = 0.25*ones(64); U(13:52,13:52) = 0.5; U(25:40,25:40) = 0.75;
 Vn = U + sqrt(0.001)*randn(size(U));
@@ -214,7 +214,7 @@ imwrite(min(max(0.5+Wn*4,0),1), fullfile(resfolder,"vie-10-noise.png"))
 vie.savetex("vie-10-psnr-obs", sprintf("%.2f", psnrV));
 %%
 %[text] ## 勾配降下法（GD 法）の概念図
-%[text] 前回スライドの手描きの図（評価関数のグラフ上で反復が最小値解に近づく）を描き直す。図のための一次元の評価関数 $ \\mathfrak{J}(x)=\\frac12\\|\\mathbf{v}-\\mathbf{H}x\\|\_2^2 $ （ $ \\mathbf{H}=(1,1,1)^\\top $ ， $ \\mathbf{v}=(1.2,0.9,0.9)^\\top $ ）に GD 法 $ x^{(t+1)}=x^{(t)}-\\eta\\,\\mathbf{H}^\\top(\\mathbf{H}x^{(t)}-\\mathbf{v}) $ （ $ \\eta=0.2 $ ， $ x^{(0)}=0 $ ）を適用する。数値はスライドに載せない。
+%[text] 図（評価関数のグラフ上で反復が最小値解に近づく）を描く。図のための一次元の評価関数 $ \\mathfrak{J}(x)=\\frac12\\|\\mathbf{v}-\\mathbf{H}x\\|\_2^2 $ （ $ \\mathbf{H}=(1,1,1)^\\top $ ， $ \\mathbf{v}=(1.2,0.9,0.9)^\\top $ ）に GD 法 $ x^{(t+1)}=x^{(t)}-\\eta\\,\\mathbf{H}^\\top(\\mathbf{H}x^{(t)}-\\mathbf{v}) $ （ $ \\eta=0.2 $ ， $ x^{(0)}=0 $ ）を適用する。数値はスライドに載せない。
 Hm = [1;1;1]; vm = [1.2;0.9;0.9];
 xls = (Hm'*Hm)\(Hm'*vm)                        % 最小値解（正規方程式の解）
 etaLs = 0.2; nStep = 6;
@@ -225,7 +225,7 @@ for t = 1:nStep
 end
 Jgd1 = arrayfun(Jls, xgd)                       % 評価関数の値（単調に減少）
 Jmin = Jls(xls);
-%[text] 反復の様子を評価関数のグラフ上に描く（前回スライドの手描きの図を踏襲）。
+%[text] 反復の様子を評価関数のグラフ上に描く。
 fig = newfig(4.0, 2.6);
 xx = linspace(-0.15, 1.25, 200);
 plot(xx, arrayfun(Jls, xx), "Color", cMain, "LineWidth", 1.5), hold on
@@ -244,7 +244,7 @@ end
 savepng(fig, fullfile(resfolder,"vie-10-gd-path.png"), 300)
 %%
 %[text] ## GD 法によるボケ除去（評価関数の減少）
-%[text] 2025 年度の演習（ `gdstep` ）にならい，ボケ＋ノイズの観測画像 $ \\mathbf{v} $ に GD 法を適用する。ガウシアンフィルタは係数が非負で総和 1 なので $ \\|\\mathbf{H}\\|\_\\mathrm{S}=\\max|H[\\boldsymbol{k}]|=1 $ となり， $ \\eta=1\\in(0,2) $ とする。
+%[text] ボケ＋ノイズの観測画像 $ \\mathbf{v} $ に GD 法を適用する。ガウシアンフィルタは係数が非負で総和 1 なので $ \\|\\mathbf{H}\\|\_\\mathrm{S}=\\max|H[\\boldsymbol{k}]|=1 $ となり， $ \\eta=1\\in(0,2) $ とする。
 %[text] $ \\lambda=0 $ （LS 法）と $ \\lambda=10^{-2} $ ， $ \\mathbf{L}=\\mathbf{I} $ （リッジ正則化）を比べる。どちらも評価関数 $ \\mathfrak{J}(\\mathbf{x}^{(t)}) $ は単調に減少する。LS 法は途中で PSNR が最大になったあと低下する（ノイズの増幅．不良設定問題）。リッジ正則化では推定が安定する。
 etaGd = 1; nGd = 300; lams = [0 1e-2];
 Jimg = zeros(nGd+1, numel(lams)); Pimg = Jimg;   % 評価関数と PSNR の履歴

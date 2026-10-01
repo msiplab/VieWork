@@ -18,7 +18,7 @@ cCool = [46 117 182]/255;                     % 寒色系（青）#2E75B6
 cWarm = [197 90 17]/255;                      % 暖色系（橙）#C55A11
 %%
 %[text] ## 画像の量子化：輝度値の離散化
-%[text] 8-bit の輝度値 $ x\\in\\{0,1,\\dots,255\\} $ を量子化ステップ $ Q $ で離散化する。前回スライドと同じく小数点以下切り捨てを用いる（教科書の線形量子化では四捨五入 $ \\lfloor \\cdot \\rceil $ も使える）。
+%[text] 8-bit の輝度値 $ x\\in\\{0,1,\\dots,255\\} $ を量子化ステップ $ Q $ で離散化する。小数点以下切り捨てを用いる（教科書の線形量子化では四捨五入 $ \\lfloor \\cdot \\rceil $ も使える）。
 %[text]{"align":"center"} $ y = \\left\\lfloor \\frac{x}{Q} \\right\\rfloor $
 %[text] 階調数を $ L $ とすると $ Q = 256/L $ である。まず簡単な数値で確かめる。 $ L=4 $ なら $ Q=64 $ 。
 L = 4; Q = 256/L
@@ -207,7 +207,7 @@ b = [16;128;128];
 vie.savetex("vie-03-ycc-M", vie.arr2tex(Mycc,"%.4f"));
 %[text] 1 行目を $ 255/219 $ 倍すると BT.601 の輝度の係数 $ (0.299\\ 0.587\\ 0.114) $ に戻る（Y' の範囲が 16〜235 の 219 段階であるため）。
 A(1,:)*255/219
-A3 = round(A,3)                               % 前回スライドの係数（小数第 3 位）
+A3 = round(A,3)                               % 係数（小数第 3 位）
 vie.savetex("vie-03-ycc-A", vie.arr2tex(A3,"%.3f"));
 %[text] 代表的な色で確かめる。列は赤，緑，青，白，黒。MATLAB の `rgb2ycbcr` の結果とも一致する。
 names = ["赤" "緑" "青" "白" "黒"];
@@ -259,7 +259,7 @@ X420 = ycbcr2rgb(cat(3, Ycc(:,:,1), Cb, Cr));
 psnr420 = psnr(X420, Xrgb)
 imwrite(X420, fullfile(resfolder,"vie-03-sub420.png"))
 vie.savetex("vie-03-sub420-psnr", sprintf("%.1f", psnr420));
-%[text] 一画素当たりのビット数とビットレート（ $ 1080\\times1920 $ 画素， $ \\Delta\_\\mathrm{t}=1/30 $ s，各成分 8 bit）。4:2:0 形式では $ R=\\Delta\_\\mathrm{t}^{-1}N\_1N\_2(\\beta\_\\mathrm{Y}+\\beta\_\\mathrm{Cb}/4+\\beta\_\\mathrm{Cr}/4) $ 。4:2:0 は前回の演習課題（SMPTE295M の 4:2:0 形式，約 746 Mbps）と同じ値になる。
+%[text] 一画素当たりのビット数とビットレート（ $ 1080\\times1920 $ 画素， $ \\Delta\_\\mathrm{t}=1/30 $ s，各成分 8 bit）。4:2:0 形式では $ R=\\Delta\_\\mathrm{t}^{-1}N\_1N\_2(\\beta\_\\mathrm{Y}+\\beta\_\\mathrm{Cb}/4+\\beta\_\\mathrm{Cr}/4) $ 。4:2:0 は SMPTE295M の 4:2:0 形式（約 746 Mbps）と同じ値になる。
 fmt = ["4:4:4"; "4:2:2"; "4:2:0"];
 bpp = [8+8+8; 8+8/2+8/2; 8+8/4+8/4];
 Rfmt = bpp*Nv*Nh/Dt;
@@ -329,7 +329,7 @@ vie.savetex("vie-03-hsv-S",    sprintf("%g",yS));
 vie.savetex("vie-03-hsv-H",    sprintf("%.0f",Hdeg));
 %%
 %[text] ## インデックス方式
-%[text] 前回スライドの例： $ 4\\times4 $ 画素，4 色（ $ \\beta\_\\mathrm{I}=2 $ bit），カラーマップの各色は RGB 各 2 bit（計 6 bit）。
+%[text] $ 4\\times4 $ 画素，4 色（ $ \\beta\_\\mathrm{I}=2 $ bit），カラーマップの各色は RGB 各 2 bit（計 6 bit）。
 idx = [0 0 0 0; 0 1 1 2; 3 1 1 1; 3 3 3 3]
 map6 = ["001111"; "111100"; "110101"; "110011"];          % RGB 各 2 bit
 cmap = [bin2dec(char(extractBetween(map6,1,2))) bin2dec(char(extractBetween(map6,3,4))) ...

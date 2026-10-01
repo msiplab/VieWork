@@ -106,7 +106,7 @@ for r = 1:size(Xs,1), for c = 1:size(Xs,2)
 end, end
 imwrite(P, fullfile(resfolder,"vie-13-pattern.png"))
 %%
-%[text] ## ディザリング：前回スライドの数値例
+%[text] ## ディザリングの数値例
 %[text] $ 8\\times8 $ の入力をディザ配列（ $ 4\\times4 $ を並べたもの）と画素ごとに比較して二値化する（ $ x\\ge $ 閾値なら 1）。
 Xin = [12 51 14 31 16 50 60 70; 30 55 23 100 13 99 79 83; 77 65 199 203 202 200 85 99;
        66 58 43 11 15 65 89 91; 87 81 64 24 98 56 80 19; 41 98 31 30 18 16 9 0;
@@ -166,7 +166,7 @@ imwrite(imresize(Xlq(1:60,141:200,:), 4, "nearest"), fullfile(resfolder,"vie-13-
 imwrite(imresize(Xed(1:60,141:200,:), 4, "nearest"), fullfile(resfolder,"vie-13-col-ed-zoom.png"))
 %%
 %[text] ## 順序統計フィルタ
-%[text] 近傍領域 $ \\mathcal{N}\_\\mathrm{f} $ （ $ 3\\times3 $ ）の画素値を昇順に並べ， $ K $ 番目の値を出力する（教科書 3.3 節）。前回スライドの例で，中央値（ $ K=(|\\mathcal{N}\_\\mathrm{f}|+1)/2=5 $ ），最小値（ $ K=1 $ ），最大値（ $ K=|\\mathcal{N}\_\\mathrm{f}|=9 $ ）を求める。
+%[text] 近傍領域 $ \\mathcal{N}\_\\mathrm{f} $ （ $ 3\\times3 $ ）の画素値を昇順に並べ， $ K $ 番目の値を出力する（教科書 3.3 節）。中央値（ $ K=(|\\mathcal{N}\_\\mathrm{f}|+1)/2=5 $ ），最小値（ $ K=1 $ ），最大値（ $ K=|\\mathcal{N}\_\\mathrm{f}|=9 $ ）を求める。
 B = [10 20 20; 20 15 20; 20 25 100];
 v = sort(B(:))'
 K = [(numel(v)+1)/2 1 numel(v)];                 % 中央値，最小値，最大値の順位
@@ -186,7 +186,7 @@ vie.savetex("vie-13-os-sortedb-min", ordlist(vb, 1));
 vie.savetex("vie-13-os-sortedb-max", ordlist(vb, numel(vb)));
 vie.savetex("vie-13-os-minb", sprintf("%d", valsb(1)));
 vie.savetex("vie-13-os-maxb", sprintf("%d", valsb(2)));
-%[text] 2 つの配列を，ます目と数値で描く（前回の演習課題の配列の図を参考）。中央の対象画素を橙で示す。
+%[text] 2 つの配列を，ます目と数値で描く。中央の対象画素を橙で示す。
 ctr = false(3); ctr(2,2) = true;
 drawgrid(B,  ctr, fullfile(resfolder,"vie-13-os-grid.png"),  0.3*cWarm + 0.7)
 drawgrid(Bb, ctr, fullfile(resfolder,"vie-13-os-gridb.png"), 0.3*cWarm + 0.7)

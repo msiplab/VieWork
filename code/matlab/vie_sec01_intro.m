@@ -89,7 +89,7 @@ end
 imwrite(Xbox, fullfile(resfolder,"vie-01-image.png"))
 %%
 %[text] ## 信号の解析（一次元）：近似成分と詳細成分
-%[text] 前回スライドの例を計算する。信号 $ x[n]\\ (n=0,1,2,\\ldots) $ に対し，**隣同士を足して 2 で割る**と近似成分 $ a[n] $，**左隣から引いて 2 で割る**と詳細成分 $ d[n] $ が得られる。
+%[text] 信号 $ x[n]\\ (n=0,1,2,\\ldots) $ に対し，**隣同士を足して 2 で割る**と近似成分 $ a[n] $，**左隣から引いて 2 で割る**と詳細成分 $ d[n] $ が得られる。
 %[text] 現在と過去の標本だけを使う**因果的**な形に書く。こうすると，次節のフィルタ $ H\_0(z)=\\frac{1}{2}(1+z^{-1}) $，$ H\_1(z)=\\frac{1}{2}(-1+z^{-1}) $ の出力そのものになる。
 %[text]{"align":"center"} $ a[n] = \\frac{1}{2}\\left(x[n]+x[n-1]\\right),\\qquad d[n] = \\frac{1}{2}\\left(-x[n]+x[n-1]\\right),\\qquad n=1,2,\\ldots $
 x = [3 1 3 1 5 3 5];               % x(1) が x[0]
@@ -191,7 +191,7 @@ whosP  = whos("P");  whosPd = whos("Pd");
 [whosPd.bytes 64*3*szp(1)*szp(2)/8]  % β = 64
 %%
 %[text] ## 1 秒あたりのビット数（ビットレート）
-%[text] 動画像では **画素数 × 画面数/秒 × ビット数/画素** がビットレート $ R $ [bps] になる。教科書の式 $ R = \\beta|\\Omega\_\\mathrm{S}||\\Omega\_\\mathrm{C}|\\Delta\_\\mathrm{t}^{-1} $ で，RGB 各 8 bit なら一画素 24 bit である。まず前回スライドの HDTV と SDTV（いずれも 30 フレーム/秒）を計算する。
+%[text] 動画像では **画素数 × 画面数/秒 × ビット数/画素** がビットレート $ R $ [bps] になる。教科書の式 $ R = \\beta|\\Omega\_\\mathrm{S}||\\Omega\_\\mathrm{C}|\\Delta\_\\mathrm{t}^{-1} $ で，RGB 各 8 bit なら一画素 24 bit である。まず HDTV と SDTV（いずれも 30 フレーム/秒）を計算する。
 Rhd = 1920*1080*30*24                % ハイビジョン品質（HDTV）[bps]
 Rsd = 720*480*30*24                  % アナログ放送品質（SDTV）[bps]
 vie.savetex("vie-01-rate-hd",   sprintf("%.1f", Rhd/1e9));
@@ -217,7 +217,7 @@ vie.savetex("vie-01-rate-8kfps", sprintf("%d", fps));
 vie.savetex("vie-01-rate-8k",    vie.fmtint(R8k));
 vie.savetex("vie-01-rate-8kG",   sprintf("%.0f", R8k/1e9));
 %[text] ### 地上デジタル放送との比較
-%[text] 地上デジタル放送では HDTV を約 14 Mbps，SDTV を約 4 Mbps で送る（前回スライドの値）。圧縮前と比べると次のとおり。
+%[text] 地上デジタル放送では HDTV を約 14 Mbps，SDTV を約 4 Mbps で送る。圧縮前と比べると次のとおり。
 Rdtv = [14e6 4e6];
 cr   = [Rhd Rsd]./Rdtv               % 何分の一に圧縮しているか
 vie.savetex("vie-01-dtv-hd", sprintf("%.0f", Rdtv(1)/1e6));
