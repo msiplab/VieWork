@@ -125,3 +125,5 @@ data/*
 # 例外：動き補償の例に使う前回スライドの映像の連続 2 フレーム（スライドの anim-11-motion-a と同じ）
 !data/anim-11-motion-a-f[0-9].jpg
 results/
+# 例外：第14回の Python 版がスライドと同じ例を作るための MATLAB の正規乱数列
+!data/vie-14-randn.txt
