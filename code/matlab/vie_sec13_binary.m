@@ -151,20 +151,19 @@ frac = mean(E25(:))
 vie.savetex("vie-13-ed25-n", sprintf("%d", sum(E25(:))));
 vie.savetex("vie-13-ed25", vie.arr2tex(E25, "%d"));
 %%
-%[text] ## カラー画像への応用：24 bpp → 8 bpp
-%[text] R, G, B を 3, 3, 2 bit（計 8 bpp）に減らす。線形量子化と成分ごとの誤差拡散を比べる。写真は msipimg01（海岸， $ 256\\times256 $ に縮小）。空のなめらかな階調で，線形量子化の擬似輪郭と誤差拡散の効果がはっきり見える。
+%[text] ## カラー画像への応用：24 bpp → 3 bpp
+%[text] R, G, B をそれぞれ 1 bit に二値化する（計 3 bpp， $ 2^3=8 $ 色）。成分ごとの閾値処理（ $ \\tau=128 $ ）と成分ごとの誤差拡散を比べる。写真は msipimg01（海岸， $ 256\\times256 $ に縮小）。空のなめらかな階調で，閾値処理の擬似輪郭と誤差拡散の効果がはっきり見える。
 Xc = im2double(vie.msipimg(1, 256));
-bits = [3 3 2];
-Xlq = zeros(size(Xc)); Xed = zeros(size(Xc));
+Xth = zeros(size(Xc)); Xed = zeros(size(Xc));
 for k = 1:3
-    Lk = 2^bits(k) - 1;
-    Xlq(:,:,k) = round(Xc(:,:,k)*Lk)/Lk;                     % 線形量子化
-    Xed(:,:,k) = floydsteinberg(Xc(:,:,k), Lk);              % 多値の誤差拡散
+    Xth(:,:,k) = double(im2uint8(Xc(:,:,k)) >= 128);          % 成分ごとの閾値処理
+    Xed(:,:,k) = floydsteinberg(Xc(:,:,k));                   % 成分ごとの誤差拡散（二値）
 end
+ncol = [size(unique(reshape(Xth,[],3),"rows"),1) size(unique(reshape(Xed,[],3),"rows"),1)]   % 使われた色の数（最大 8）
 imwrite(Xc,  fullfile(resfolder,"vie-13-col-org.png"))
-imwrite(Xlq, fullfile(resfolder,"vie-13-col-lq.png"))
+imwrite(Xth, fullfile(resfolder,"vie-13-col-th.png"))
 imwrite(Xed, fullfile(resfolder,"vie-13-col-ed.png"))
-imwrite(imresize(Xlq(1:60,141:200,:), 4, "nearest"), fullfile(resfolder,"vie-13-col-lq-zoom.png"))
+imwrite(imresize(Xth(1:60,141:200,:), 4, "nearest"), fullfile(resfolder,"vie-13-col-th-zoom.png"))
 imwrite(imresize(Xed(1:60,141:200,:), 4, "nearest"), fullfile(resfolder,"vie-13-col-ed-zoom.png"))
 %%
 %[text] ## 順序統計フィルタ
