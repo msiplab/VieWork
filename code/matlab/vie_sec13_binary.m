@@ -136,13 +136,15 @@ imwrite(Dth, fullfile(resfolder,"vie-13-dither.png"))
 ed = @(x) floydsteinberg(x);
 E = ed(X/255);
 imwrite(E, fullfile(resfolder,"vie-13-errdiff.png"))
-%[text] 局所的な白画素の割合は元の明るさに近い（ $ 8\\times8 $ 平均の比較）。
+%[text] 局所的な白画素の割合は元の明るさに近い（ $ 8\\times8 $ 平均の比較。パターンニングの結果も同じ $ 256\\times256 $ なので並べて比べる）。
 loc = [mean(abs(imresize(E,1/8,"box") - imresize(X/255,1/8,"box")), "all") ...
        mean(abs(imresize(Dth,1/8,"box") - imresize(X/255,1/8,"box")), "all") ...
-       mean(abs(imresize(double(X>=128),1/8,"box") - imresize(X/255,1/8,"box")), "all")]
+       mean(abs(imresize(double(X>=128),1/8,"box") - imresize(X/255,1/8,"box")), "all") ...
+       mean(abs(imresize(P,1/8,"box") - imresize(X/255,1/8,"box")), "all")]
 vie.savetex("vie-13-loc-ed", sprintf("%.3f", loc(1)));
 vie.savetex("vie-13-loc-di", sprintf("%.3f", loc(2)));
 vie.savetex("vie-13-loc-th", sprintf("%.3f", loc(3)));
+vie.savetex("vie-13-loc-pa", sprintf("%.3f", loc(4)));
 %[text] 数値例：一様な明るさ 0.25 の $ 8\\times8 $ 画像では，白画素の割合がほぼ 1/4 になる（端では誤差を配りきれないので少しずれる）。
 E25 = ed(0.25*ones(8))
 frac = mean(E25(:))
