@@ -241,12 +241,12 @@ end
 montage(maps, "Size", [1 4])
 %%
 %[text] ## ウェーブレット変換（多段の分析フィルタバンク）
-%[text] ハールのウェーブレットで 2 段に分解する（第 9 回）。低域（左上）をさらに分解していくので，解像度の違う特徴が段ごとに得られる。高域の係数は絶対値を濃さで描く。
+%[text] ハールのウェーブレットで 2 段に分解する（第 9 回）。低域（左上）をさらに分解していくので，解像度の違う特徴が段ごとに得られる。高域の係数は絶対値を濃さで描く。2 段のハールでは低域の値が 4 倍になるので，4 で割って描く。
 Xw = im2double(vie.msipimg(4, 256, "gray"));
 [cA1, cH1, cV1, cD1] = dwt2(Xw, "haar");
 [cA2, cH2, cV2, cD2] = dwt2(cA1, "haar");
 hiShow = @(Y) 1 - min(abs(Y)/0.25, 1);                                   % 高域：0 を白，大きいほど黒
-Wimg = [[cA2/2, hiShow(cH2); hiShow(cV2), hiShow(cD2)], hiShow(cH1); hiShow(cV1), hiShow(cD1)];
+Wimg = [[cA2/4, hiShow(cH2); hiShow(cV2), hiShow(cD2)], hiShow(cH1); hiShow(cV1), hiShow(cD1)];
 imwrite(Wimg, fullfile(resfolder, "vie-14-wavelet.png"))
 %%
 %[text] ## 勾配降下法と SGD 法
@@ -278,7 +278,7 @@ exportgraphics(gca, fullfile(resfolder,"vie-14-gd.png"), "Resolution", 150, "Wid
 Lm = @(th) 0.08*th.^4 - 0.1*th.^3 - 0.6*th.^2 + 0.3*th + 2;
 dLm = @(th) 0.32*th.^3 - 0.3*th.^2 - 1.2*th + 0.3;
 thv = linspace(-3.2, 3.6, 401);
-etaM = 0.15; nM = 30; thA = -3.0; thB = 0.6;      % 初期値 A（左），B（中央の山の右）
+etaM = 0.15; nM = 30; thA = -2.6; thB = 0.6;      % 初期値 A（左），B（中央の山の右）
 for k = 1:nM, thA(end+1) = thA(end) - etaM*dLm(thA(end)); thB(end+1) = thB(end) - etaM*dLm(thB(end)); end %#ok<SAGROW>
 clf
 plot(thv, Lm(thv), "Color", [0.4 0.4 0.4], "LineWidth", 1.5), hold on
