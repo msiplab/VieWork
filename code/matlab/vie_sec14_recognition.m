@@ -1,7 +1,7 @@
 %[text] # 第14回 パターン認識と特徴抽出
 %[text] 村松正吾　「画像情報工学」
 %[text] 動作確認： MATLAB R2026b
-%[text] 第14回のスライド（vie2026-14）で使う図と数値を作る。特徴空間と最近傍決定則，色の特徴空間，ハリスのコーナー検出，キャニーの輪郭線検出（教科書の例題「プレウィットフィルタ」「勾配の大きさ」），ハフ変換による直線検出，ニューラルネットワーク（活性化関数，教科書 10.1.1 項の損失関数による誤差逆伝播法の学習），畳み込み層とプーリング層を扱う。記号は教科書に合わせる。
+%[text] 第14回のスライド（vie2026-14）で使う図と数値を作る。特徴空間と最近傍決定則，色の特徴空間，ハリスのコーナー検出，キャニーの輪郭線検出（教科書の例題「プレウィットフィルタ」「勾配の大きさ」），ハフ変換による直線検出，ニューラルネットワーク（活性化関数，勾配降下法と SGD 法，多峰性の損失の模式図，畳込み NN の学習），畳み込み層とプーリング層，ウェーブレット変換を扱う。記号は教科書に合わせる。
 %[text:tableOfContents]{"heading":"目次"}
 %%
 %[text] ## 準備
@@ -216,14 +216,14 @@ colormap(gca, gray)
 %%
 %[text] ## 活性化関数
 %[text] 活性化関数 $ \\phi(\\cdot) $ の例（参考資料 2 章）：シグモイド関数 $ 1/(1+\\mathrm{e}^{-au}) $ （ $ a=1 $ ，章末問題），ReLU（整流線形関数） $ \\max(0,u) $ （2.1.5 項，ヒンジ関数で $ \\lambda=0 $ としたランプ関数）。
-u = linspace(-4, 4, 401);
+u = linspace(-3, 3, 301);
 clf
 plot(u, 1./(1+exp(-u)), "Color", cMain, "LineWidth", 2), hold on
 plot(u, max(u,0), "Color", cWarm, "LineWidth", 2), hold off
-grid on, ylim([-0.5 2])
+grid on, axis equal, xlim([-3 3]), ylim([-0.5 3])      % 縦横の目盛りを 1:1 に
 legend(["シグモイド 1/(1+e^{-{\itu}})", "ReLU max(0,{\itu})"], "Location", "northwest", "Interpreter", "tex")
 xlabel("{\itu}"), ylabel("\phi({\itu})"), set(gca, "FontSize", 12)
-exportgraphics(gca, fullfile(resfolder,"vie-14-activation.png"), "Resolution", 150, "Width", 9, "Height", 6.5, "Units", "centimeters")
+exportgraphics(gca, fullfile(resfolder,"vie-14-activation.png"), "Resolution", 150, "Width", 9, "Height", 6, "Units", "centimeters")
 %%
 %[text] ## 畳み込み層とプーリング層
 %[text] 4 種類のフィルタ（フィルタバンク）で畳み込み，ReLU を施し， $ 2\\times2 $ の最大値プーリングで縮小した特徴マップを並べる。入力は石造りの建物（msipimg04 をグレースケールにして 256×256 に縮小）で，柱の縦の縁と階段の横の縁がそれぞれ別の特徴マップに現れ，フィルタの方向選択性が分かる。
@@ -240,10 +240,105 @@ for i = 1:4
 end
 montage(maps, "Size", [1 4])
 %%
+%[text] ## ウェーブレット変換（多段の分析フィルタバンク）
+%[text] ハールのウェーブレットで 2 段に分解する（第 9 回）。低域（左上）をさらに分解していくので，解像度の違う特徴が段ごとに得られる。高域の係数は絶対値を濃さで描く。
+Xw = im2double(vie.msipimg(4, 256, "gray"));
+[cA1, cH1, cV1, cD1] = dwt2(Xw, "haar");
+[cA2, cH2, cV2, cD2] = dwt2(cA1, "haar");
+hiShow = @(Y) 1 - min(abs(Y)/0.25, 1);                                   % 高域：0 を白，大きいほど黒
+Wimg = [[cA2/2, hiShow(cH2); hiShow(cV2), hiShow(cD2)], hiShow(cH1); hiShow(cV1), hiShow(cD1)];
+imwrite(Wimg, fullfile(resfolder, "vie-14-wavelet.png"))
+%%
+%[text] ## 勾配降下法と SGD 法
+%[text] 2 クラスの識別器を，学習パラメータ $ \\bm\\Theta=\\{w,b\\} $ の 2 つだけで作る（1 次元の特徴 $ x $ ，出力 $ p=1/(1+\\mathrm{e}^{-(wx+b)}) $ はクラス $ \\omega\_2 $ の確からしさ。2 クラスのソフトマックス関数）。損失関数は交差エントロピー。損失の等高線の上に，全事例の平均の勾配で下る最急降下法と，ミニバッチ（8 個）の平均の勾配で下る SGD 法の道すじを描く。初期値とステップサイズは同じ。
+rng(1)
+S = 40; xs = [randn(S/2,1)-1; randn(S/2,1)+1];   % 特徴（クラス ω1 は平均 -1，ω2 は平均 +1）
+ts = [zeros(S/2,1); ones(S/2,1)];                % 教師（ω2 なら 1）
+lossf = @(w,b) mean(-ts.*log(1./(1+exp(-(w*xs+b)))) - (1-ts).*log(1-1./(1+exp(-(w*xs+b)))));
+gradf = @(th,idx) [mean((1./(1+exp(-(th(1)*xs(idx)+th(2))))-ts(idx)).*xs(idx)); mean(1./(1+exp(-(th(1)*xs(idx)+th(2))))-ts(idx))];
+[Wg,Bg] = meshgrid(linspace(-1.5,4,221), linspace(-2.5,2.5,201));
+Lg = arrayfun(lossf, Wg, Bg);
+eta = 1.0; nIter = 40; th0 = [-1; 2];
+thG = th0; for k = 1:nIter, thG(:,end+1) = thG(:,end) - eta*gradf(thG(:,end), 1:S); end %#ok<SAGROW>
+thS = th0; for k = 1:nIter, thS(:,end+1) = thS(:,end) - eta*gradf(thS(:,end), randperm(S,8)); end %#ok<SAGROW>
+thOpt = fminsearch(@(th) lossf(th(1),th(2)), [1; 0]);
+clf
+contour(Wg, Bg, Lg, 0.3:0.1:1.6, "Color", [0.65 0.65 0.65]), hold on
+plot(thG(1,:), thG(2,:), "-o", "Color", cCool, "LineWidth", 1.8, "MarkerSize", 3, "MarkerFaceColor", cCool)
+plot(thS(1,:), thS(2,:), "-o", "Color", cWarm, "LineWidth", 1.2, "MarkerSize", 3, "MarkerFaceColor", cWarm)
+plot(thOpt(1), thOpt(2), "p", "Color", "k", "MarkerFaceColor", "k", "MarkerSize", 9)
+plot(th0(1), th0(2), "s", "Color", "k", "MarkerFaceColor", "w", "MarkerSize", 7), hold off
+axis equal, xlim([-1.5 4]), ylim([-1 2.5])
+legend(["損失の等高線", "最急降下法", "SGD 法", "最小", "初期値"], "Location", "southwest", "FontSize", 8)
+xlabel("重み {\itw}"), ylabel("バイアス {\itb}"), set(gca, "FontSize", 11)
+exportgraphics(gca, fullfile(resfolder,"vie-14-gd.png"), "Resolution", 150, "Width", 9, "Height", 6.5, "Units", "centimeters")
+%%
+%[text] ## 多峰性の損失（模式図）
+%[text] 層を重ねた NN の損失関数は，谷がいくつもある多峰性の関数になる。谷が 2 つある 1 変数の関数 $ \\mathfrak{L}(\\theta) $ を模式的な例として，同じステップサイズの最急降下法を 2 つの初期値から走らせる。初期値によって別の谷に着き，浅い方の谷（局所解）に着くと，大域的な最小には届かない。
+Lm = @(th) 0.08*th.^4 - 0.1*th.^3 - 0.6*th.^2 + 0.3*th + 2;
+dLm = @(th) 0.32*th.^3 - 0.3*th.^2 - 1.2*th + 0.3;
+thv = linspace(-3.2, 3.6, 401);
+etaM = 0.15; nM = 30; thA = -3.0; thB = 0.6;      % 初期値 A（左），B（中央の山の右）
+for k = 1:nM, thA(end+1) = thA(end) - etaM*dLm(thA(end)); thB(end+1) = thB(end) - etaM*dLm(thB(end)); end %#ok<SAGROW>
+clf
+plot(thv, Lm(thv), "Color", [0.4 0.4 0.4], "LineWidth", 1.5), hold on
+plot(thA, Lm(thA), "-o", "Color", cWarm, "LineWidth", 1.2, "MarkerSize", 4, "MarkerFaceColor", cWarm)
+plot(thB, Lm(thB), "-o", "Color", cCool, "LineWidth", 1.2, "MarkerSize", 4, "MarkerFaceColor", cCool)
+plot([thA(1) thB(1)], Lm([thA(1) thB(1)]), "s", "Color", "k", "MarkerFaceColor", "w", "MarkerSize", 7)
+text(thA(end), Lm(thA(end))-0.35, "局所解", "HorizontalAlignment", "center", "Color", cWarm, "FontSize", 11)
+text(thB(end), Lm(thB(end))-0.35, "大域的な最小", "HorizontalAlignment", "center", "Color", cCool, "FontSize", 11)
+hold off, xlim([-3.2 3.6]), ylim([-0.6 4]), box off
+xlabel("パラメータ \theta"), ylabel("損失"), set(gca, "FontSize", 11, "XTick", [], "YTick", [])
+exportgraphics(gca, fullfile(resfolder,"vie-14-gd-multi.png"), "Resolution", 150, "Width", 7, "Height", 5.5, "Units", "centimeters")
+%%
+%[text] ## 畳込み NN の学習：手書き数字の識別
+%[text] 小さな畳込み NN（畳込み層 5×5×8 → バッチ正規化 → ReLU → 最大値プーリング → 畳込み層 3×3×16 → バッチ正規化 → ReLU → 最大値プーリング → 全結合層 → ソフトマックス層）を，MATLAB に付属する手書き数字のデータ（DigitDataset，28×28，10 クラス，各 1000 枚）で学習する。損失関数は交差エントロピー，最適化は SGD 法（モーメンタム付き，ミニバッチ 128）。1 層目のフィルタ（ $ \\mathbf{W}^{(1)} $ の要素）を，人が設計したソーベル・ラプラシアンと並べて描く。学習したフィルタの形は人には読みにくいが，特徴マップを見ると，向きや太さの違う縁が取り出されている。
+digitPath = fullfile(matlabroot, "toolbox", "nnet", "nndemos", "nndatasets", "DigitDataset");
+imds = imageDatastore(digitPath, "IncludeSubfolders", true, "LabelSource", "foldernames");
+[imdsTrain, imdsTest] = splitEachLabel(imds, 0.8, "randomized");
+layers = [imageInputLayer([28 28 1])
+    convolution2dLayer(5, 8, "Padding", "same"); batchNormalizationLayer; reluLayer; maxPooling2dLayer(2, "Stride", 2)
+    convolution2dLayer(3, 16, "Padding", "same"); batchNormalizationLayer; reluLayer; maxPooling2dLayer(2, "Stride", 2)
+    fullyConnectedLayer(10); softmaxLayer];
+opts = trainingOptions("sgdm", "InitialLearnRate", 0.01, "MaxEpochs", 6, "MiniBatchSize", 128, ...
+    "Shuffle", "every-epoch", "Verbose", false, "Plots", "none");
+net0 = initialize(dlnetwork(layers));
+net = trainnet(imdsTrain, net0, "crossentropy", opts);
+W1 = net.Layers(2).Weights;                      % 学習した 1 層目のフィルタ
+classes = categories(imds.Labels);
+scores = minibatchpredict(net, imdsTest);
+acc = mean(scores2label(scores, classes) == imdsTest.Labels);
+vie.savetex("vie-14-cnn-acc", sprintf("%.1f", 100*acc));
+vie.savetex("vie-14-cnn-ntest", sprintf("%d", numel(imdsTest.Files)));
+%[text] フィルタの係数は，0 を白，正を橙，負を青で描く（係数の大きさで濃さを変える）。
+cmapDiv = [linspace(cCool(1),1,64)' linspace(cCool(2),1,64)' linspace(cCool(3),1,64)'; ...
+           linspace(1,cWarm(1),64)' linspace(1,cWarm(2),64)' linspace(1,cWarm(3),64)'];
+kshow = @(K) ind2rgb(round(63.5 + 63.5*K/max(abs(K(:)))) + 1, cmapDiv);
+upk = @(I) imresize(I, [60 60], "nearest");
+Fh = {[-1 0 1; -2 0 2; -1 0 1], [-1 -2 -1; 0 0 0; 1 2 1], [0 1 0; 1 -4 1; 0 1 0], -[0 1 0; 1 -4 1; 0 1 0]};
+for i = 1:4, imwrite(upk(kshow(Fh{i})), fullfile(resfolder, sprintf("vie-14-kh%d.png", i))), end
+for i = 1:8
+    imwrite(upk(kshow(W1(:,:,1,i))), fullfile(resfolder, sprintf("vie-14-k1-%d.png", i)))
+end
+%[text] テストの「3」を 1 枚選び，1 層目の特徴マップ（畳込み＋ReLU）と，ソフトマックス層の出力 $ \\mathbf{p} $ を描く。
+i3 = find(imdsTest.Labels == "3", 1);
+X3 = single(readimage(imdsTest, i3));            % 学習と同じ 0〜255 の値で入れる
+imwrite(imresize(X3/255, 4, "nearest"), fullfile(resfolder, "vie-14-cnn-in.png"))
+Z = predict(net, dlarray(X3, "SSCB"), "Outputs", net.Layers(4).Name);   % 1 層目の畳込み＋バッチ正規化＋ReLU
+Z = extractdata(Z);
+for i = 1:8
+    imwrite(imresize(Z(:,:,i)/max(max(Z(:,:,i)),[],"all"), 4, "nearest"), fullfile(resfolder, sprintf("vie-14-cnn-map%d.png", i)))
+end
+p3 = extractdata(predict(net, dlarray(X3, "SSCB")));
+clf
+bar(0:9, p3, 0.6, "FaceColor", cMain), ylim([0 1]), xticks(0:9)
+xlabel("クラス（数字）"), ylabel("{\itp_k}"), set(gca, "FontSize", 12), box off
+exportgraphics(gca, fullfile(resfolder,"vie-14-cnn-p.png"), "Resolution", 150, "Width", 7, "Height", 4.5, "Units", "centimeters")
+%%
 %[text] ## まとめ
 %[text] - パターン認識は特徴抽出と識別（識別辞書との照合）からなる。最近傍決定則は最も近い代表ベクトルのクラスを出力する
 %[text] - ハリスのコーナー検出，キャニーの輪郭線検出，ハフ変換はガウシアンフィルタと勾配フィルタ（第5回）を土台にする
-%[text] - ニューラルネットワークは重み付け和と活性化関数の多層構造で，損失関数（1/2 倍した平均二乗誤差）の勾配を誤差逆伝播法で求めて学習する。畳み込み層はフィルタバンクに相当する \
+%[text] - ニューラルネットワークは重み付け和と活性化関数の多層構造で，損失関数（交差エントロピー）の勾配を誤差逆伝播法で求め，勾配降下法（SGD 法）で学習する。畳み込み層は係数を学習するフィルタバンクに相当する \
 %[text] © Copyright, Shogo MURAMATSU, All rights reserved.
 %[appendix]{"version":"1.0"}
 %---
